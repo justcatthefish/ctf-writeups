@@ -1,0 +1,57 @@
+catch syscall ptrace
+r
+c
+set $rax = 0
+d 1 2
+catch syscall write
+d 1 2 3
+catch syscall read
+# zatrzyma sie przed syscallem read
+c
+# zatrzyma sie po syscallu read
+c
+d 1 2 3 4
+# jestesmy teraz po readzie w fgets  w libc
+# konkretniej w jakims IO_getline
+# robimy steprety zeby wrocic do kodu  programu
+stepret
+stepret
+stepret
+stepret
+stepret
+si
+nextcall
+si
+# ^ do tego calla przekazuje flage
+nextcall
+# ^-- tutaj robi fopen("/proc/self/exe", "rb")
+nextcall
+# ^-- fseek(fp, 0, SEEK_END) <-- idzie na koniec
+nextcall
+# ^- robi ftell(fp) <-- mierzy dlugosc pliku, zapisuje ja
+nextcall
+# ^- robi  fseek(fp, 0, SEEK_SET) <-- idzie na start pliku
+nextcall
+# ^- robi fclose(fp)
+nextcall
+# ^- dziwna funkcja, chyba cos rozszyfrowuje
+nextcall
+nextjump
+# ^-- start petli sprawdzajacej flage?
+define hook-stop
+printf "i=%d, success=%d\n", *(int*)($rbp-0x6c), *(int*)($rbp-0x70)
+end
+nextjump
+nextcall
+# ^-- sprawdzaine czy flaga zaczyna si eod ...
+# <<< check na dlugosc flagi 148
+# actf{not_an_idiot._aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+# ^ ta flaga przechodzi
+nextcall
+# ^-- sprintf(bufx, "%02x")
+nextcall
+# ^-- memcmp(flag[za {], "b1", 2)
+# actf{not_an_idiot._b1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+nextjmp
+nextjmp
+# ^-- success=1
