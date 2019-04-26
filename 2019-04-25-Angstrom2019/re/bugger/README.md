@@ -6,7 +6,7 @@
 * Solved by 32 teams
 * rated as 200 points
 
-We started with some static analysis but as the task description suggested it didn't go well, so we went into a more dyamic approach.
+We started with some static analysis but as the task description suggested it didn't go well, so we went into a more dynamic approach.
 
 The [bugger](bugger) binary has some anti-debugging protection. This can be see e.g. via `strace` (output truncated at `// (...)`):
 
