@@ -51,7 +51,7 @@ int main() {
 We are given the task's binary, the libc (which happens to be the libc from 
 Ubuntu 16.04 Xenial) and... the source code!
 
-This task is almost identical to angstrom's purchases task except it doesn't have
+This task is almost identical to the angstrom's purchases task except it doesn't have
 the `flag` function which gave us the flag. Knowing that, we already know the 
 vulnerability - format-string vulnerability.
 
@@ -59,7 +59,7 @@ The plan is to call `system("/bin/sh")`, so we need the libc base address.
 Then, knowing `system` address we want to redirect execution to it and pass
 `"/bin/sh"` as an argument.
 
-How do we do it only with one possiblility to write to the buffer `item`? 
+How do we do it only with one possibility to write to the buffer `item`? 
 We could make ourselves a loop.
 Luckily the binary has PIE disabled and last `printf` got translated into `puts`.
 If we overwrite GOT entry of puts with address right before fgets call we
@@ -112,7 +112,7 @@ payload += '\n'
 ```
 
 #### How to get a libc leak then?
-Luckilly there is `__libc_start_main+240` address on the stack when calling vulerable
+Luckily there is `__libc_start_main+240` address on the stack when calling vulnerable
 `printf`.
 
 ```
@@ -209,7 +209,7 @@ io.send(payload)
 ```
 
 When we overwrite 4 bytes at the same time, the binary prints massive amount of 
-zeroes. Printing them to the console takes ages... but finaly spawns our beloved 
+zeroes. Printing them to the console takes ages... but finally spawns our beloved 
 shell.
 
 @mzr - justCatTheFish
