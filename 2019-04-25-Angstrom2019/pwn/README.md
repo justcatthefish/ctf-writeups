@@ -6,10 +6,10 @@
 
 This directory contains pwn tasks solutions
 
-These tasks contains just solving scripts:
+These tasks only contain solving scripts:
 * over my brain
 * pie shop
 * purchases
 * server
 
-we might add some more details or better writeups if someone pings us to add it
+We might add some more details or better writeups if someone pings us to add it.
