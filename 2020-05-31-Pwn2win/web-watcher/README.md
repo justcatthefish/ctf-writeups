@@ -48,21 +48,21 @@ To achieve the goal of getting a URL of a generated page, we need to **make `wap
 
 ### Content Security Policy
 
-One important addition that can be spotted in the provided screenshot is the appended part of the code to each page. It contains a very restrictive *Content Security Policy* set to `default-src: none` which prevents from executing arbitrary JavaScript code and is most likely not bypassable. 
+One important addition that can be spotted in the provided screenshot is the code appended to each page. It contains a very restrictive *Content Security Policy* set to `default-src: none` which prevents from executing arbitrary JavaScript code and is most likely not bypassable. 
 
 
 ### Wappalyzer
 
 Wappalyzer is generally known as a browser [extension](https://chrome.google.com/webstore/detail/wappalyzer/gppongmhjkpfnbhagpmjfkannfbllamg?hl=en) that identifies technologies used on websites. It has over 1M users in the store so one could say it's kind of popular. 
 
-There is a variation of it in the form of a standalone [npm package](https://www.npmjs.com/package/wappalyzer) which was also used in the challenge. The recent versions use a headless browser for dynamic analysis of the page, which respects the CSP for code execution. The tool heavily relies on regular expressions, available [here](https://github.com/AliasIO/wappalyzer/blob/dfe686e524345145bd6286de2148b87d83b575d4/src/apps.json), which the author managed to leverage and created a cool challenge about it as the result.
+There is a variation of it in the form of a standalone [npm package](https://www.npmjs.com/package/wappalyzer) which was also used in the challenge. The recent versions use a headless browser for dynamic analysis of the page, which respects the CSP for code execution. The tool heavily relies on regular expressions, available [here](https://github.com/AliasIO/wappalyzer/blob/dfe686e524345145bd6286de2148b87d83b575d4/src/apps.json), which were leveraged by the challenge author to create a cool task.
 
 
 
 ### Defensive strategies
-We could potentially abuse the time loading of the page by crafting a very long payload. To prevent that, each page could maximally consist of 1500 characters.
+We could potentially abuse the page loading time by crafting a very long payload. To prevent that, each page could maximally consist of 1500 characters.
 
-Another implemented protection was blocking *meta redirect* that was supposed to protect against redirection of a page to another one. We crafted an unintentional bypass to that with `<meta http-equiv="refres&#x68;" content="1;https://example.org">` but we didn't find it useful in the final solution. The only advantage it gave us was discovering HTTP headers `Referer: http://localhost/page/xxx` and `User-Agent` indicating `Headless Chrome 80` browser from which the admin visited. 
+Another implemented protection was blocking *meta redirect* that was supposed to block redirects to another pages. We crafted an unintentional bypass to that with `<meta http-equiv="refres&#x68;" content="1;https://example.org">` but we didn't find it useful in the final solution. The only advantage it gave us was discovering HTTP headers: `Referer: http://localhost/page/xxx` and `User-Agent`, indicating `Headless Chrome 80` browser from which the admin visited. 
 
 The third protection was reCAPTCHA that was painful because we quickly ran out of available attempts. This was meant to prevent the application from being DDoS'ed through submissions.
 
@@ -100,7 +100,7 @@ This meant that if there was an XSS, it was most likely here.
 
 ## Solution
 ### Idea
-With the prior research it was clear that we have to do basically two things:
+With the prior research it was clear that we have to do two things:
 - attack the wappalyzer with [ReDos](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS) attack
 - trigger XSS on the *check* endpoint and send it to the admin
 
@@ -180,12 +180,12 @@ We managed to retrieve the URL for our single note, but when we submit it to the
 
 With enough attempts, we could probably create a note that is executing near the allowed time and therefore returns two different results with the same note. But would the admin spend over 20 seconds to wait for the page to load? We doubted it and went into researching other possibilities despite the fact that this solution would be even more beautiful in our opinion :)
 
-Now, the fact that other pages are not being removed comes really handy. We noticed that if we change the `-home.html` suffix in the URL of the page `pages/b699e61f9d5ce40a7caa8d7b3e66be98979a5b9f838073a833739c8b3f54d726/fd8f9ba6ede0-home.html` to `-about.html` we could see our 2nd page. Viola, that's exactly what we need. 
+Now, the fact that other pages are not being removed comes really handy. We noticed that if we change the `-home.html` suffix in the URL of the `pages/b699e61f9d5ce40a7caa8d7b3e66be98979a5b9f838073a833739c8b3f54d726/fd8f9ba6ede0-home.html` page to `-about.html` we could see our 2nd page. Viola, that's exactly what we need. 
 
 #### Getting the XSS
 ![](./screenshots/alert.png)
 
-We've got all you need but where is the XSS? We've analyzed a lot of expressions in the search for something that would allow us to inject `<>` characters. There is a lot of rules like
+We've got all we needed but where was the XSS? We've analyzed a lot of expressions in the search for something that would allow us to inject `<>` characters. There are a lot of rules like
 
 ```json
 {
@@ -219,7 +219,6 @@ const js = processJs(
   await page.evaluate(getJs), 
   this.wappalyzer.jsPatterns
 )
-
 ```
 
 But the CSP blocks script evaluation and because of that, it will fail. 
@@ -253,7 +252,7 @@ With these two observations we stopped looking at the `js` and `meta` properties
     },
 ```
 
-Which can be visualized as the image below. 
+Which is visualized on the image below. 
 
 ![](./screenshots/xss_regex.png)
 
