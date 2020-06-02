@@ -146,7 +146,7 @@ The regular expression can be visualized as:
 
 ![](./screenshots/redos.png)
 
-We can see that there is a double loop and a dot character matches both `None of: "/"` and `.`. This is exactly what we need to perform backtracking based ReDoS attacks. With the payload including a lot of dots, we can achieve our goal with the below snippet.
+We can see that there is a double loop and a dot character matches both `None of: "/"` and `.`. This is exactly what we need to perform backtracking based ReDoS attack. With the payload including enough dots, we can achieve our goal with the below snippet.
 
 ```html
 <script   
@@ -155,7 +155,7 @@ We can see that there is a double loop and a dot character matches both `None of
 ```
 
 
-We also found another vulnerable RegExp in `Carbon Ads` package:
+We also found another vulnerable RegExp in `Carbon Ads` package which is almost the same as the above one, shown below.
 
 ```json 
     "Carbon Ads": {
