@@ -19,7 +19,7 @@ Last weekend, our team took part in a cool CTF &mdash; Pwn2Win. We've got a pret
 
 ### Quick overview
 
-There are three functionalities of the web application presented to us by the authors: 
+There are three functionalities in the web application presented to us by the authors: 
 - *content upload* of three different HTML pages: home, about and contact
 - *check service* that displays metadata about uploaded files when URL was provided
 - *bug report* that sends a generated HTML page to the admin for checking it with `wappalyzer`
@@ -28,7 +28,7 @@ Without exploiting any vulnerabilities, URLs of generated pages will not be disp
 
 
 ### Backend
-Although in the challenge we weren't provided with a complete source code of the backend server, there was a link to the source of `weaponlyzer` function [./weaponlyzer.php](./weaponlyzer.php). In that code, we could see that the engine responsible for fetching metadata about the pages was a tool called [wappalyzer](https://github.com/AliasIO/wappalyzer) that was run with the code below, where `$targets[$i]` was a URL to a generated file for three home, about and contact pages.
+Although in the challenge we weren't provided with a complete source code of the backend server, there was a link to the source of `weaponlyzer` function [./weaponlyzer.php](./weaponlyzer.php). In that code, we could see that the engine responsible for fetching metadata about the pages was a tool called [wappalyzer](https://github.com/AliasIO/wappalyzer) that was run with the code below, where `$targets[$i]` was the URL to one of the generated page: home, about or contact.
 
 ```php
 shell_exec('timeout -k 3s 20s wappalyzer -w 8 ' . escapeshellarg(escapeshellcmd($targets[$i])));
@@ -42,9 +42,9 @@ shell_exec('timeout -k 3s 20s wappalyzer -w 8 ' . escapeshellarg(escapeshellcmd(
 } else {
 ```
 
-If calling `shell_exec` returns an empty string, we will see the URL for the page that triggered the error. One more very important observation that will come handy later on, is that the page and any following ones will not be removed from the disk. 
+If calling `shell_exec` returns an empty string, we will see the URL of the page that triggered the error. One more very important observation that will come handy later on, is that the page and any following ones will not be removed from the disk. 
 
-To achieve the goal of getting a URL of a generated page, we need to **make `wappalyzer` return nothing**, which it does if the `timeout` command kills the process after 20 seconds, for instance. We confirmed that by lowering the timeout from original `20s` to `1s` and firing the wappalyzer on a constantly loading page.
+To achieve the goal of getting a URL of a generated page, we need to **make `wappalyzer` return nothing**. This can happen, e.g., if the `timeout` command kills the process after 20 seconds. We confirmed that by lowering the timeout from original `20s` to `1s` and firing the wappalyzer on a constantly loading page.
 
 ### Content Security Policy
 
