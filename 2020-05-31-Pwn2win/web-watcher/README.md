@@ -1,6 +1,6 @@
 # Watchers (2 solves) &mdash; writeup by justCatTheFish
 
-Last weekend, our team took part in a cool CTF -- Pwn2Win. We've got a pretty nice score and managed to solve a few hard challenges. In this writeup, we will present a solution to the *Watchers* challenge that has been solved only by two teams. The challenge involved exploitation of not so common Regular Expression Denial of Service (ReDoS) technique combined with Cross-Site Scripting (XSS). 
+Last weekend, our team took part in a cool CTF &mdash; Pwn2Win. We've got a pretty nice score and managed to solve a few hard challenges. In this writeup, we will present a solution to the *Watchers* challenge that has been solved only by two teams. The challenge involved exploitation of not so common Regular Expression Denial of Service (ReDoS) technique combined with Cross-Site Scripting (XSS). 
 
 
 *The [author](https://twitter.com/vrechson) of the challenge released the [source code](https://github.com/pwn2winctf/challenges-2020/tree/master/web-Watchers) of the challenge so you can try it out locally.*
@@ -24,7 +24,7 @@ There are three functionalities of the web application presented to us by the au
 - *check service* that displays metadata about uploaded files when URL was provided
 - *bug report* that sends a generated HTML page to the admin for checking it with `wappalyzer`
 
-Without exploiting any vulnerabilities, URLs of generated pages will not be displayed to the user, and because of which *check service* and *bug reports* can't be used. This leads us to the first objective of the mission -- **leak the URL of a generated page.**. 
+Without exploiting any vulnerabilities, URLs of generated pages will not be displayed to the user, and because of which *check service* and *bug reports* can't be used. This leads us to the first objective of the mission &mdash; **leak the URL of a generated page.**. 
 
 
 ### Backend
