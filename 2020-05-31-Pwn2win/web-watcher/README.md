@@ -1,4 +1,4 @@
-# Watchers (2 solves) -- writeup by justCatTheFish
+# Watchers (2 solves) &mdash; writeup by justCatTheFish
 
 Last weekend, our team took part in a cool CTF -- Pwn2Win. We've got a pretty nice score and managed to solve a few hard challenges. In this writeup, we will present a solution to the *Watchers* challenge that has been solved only by two teams. The challenge involved exploitation of not so common Regular Expression Denial of Service (ReDoS) technique combined with Cross-Site Scripting (XSS). 
 
