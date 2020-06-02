@@ -24,11 +24,11 @@ There are three functionalities of the web application presented to us by the au
 - *check service* that displays metadata about uploaded files when URL was provided
 - *bug report* that sends a generated HTML page to the admin for checking it with `wappalyzer`
 
-Without exploiting any vulnerabilities, URLs of generated pages will not be displayed to the user, and because of which *check service* and *bug reports* can't be used. This leads us to the first objective of the mission &mdash; **leak the URL of a generated page.**. 
+Without exploiting any vulnerabilities, URLs of generated pages will not be displayed to the user, and because of that, *check service* and *bug reports* can't be used. This leads us to the first objective of the mission &mdash; **leak the URL of a generated page.**. 
 
 
 ### Backend
-Although in the challenge we weren't provided with a complete source code of the backend server, there was a link to the source of `weaponlyzer` function [./weaponlyzer.php](./weaponlyzer.php). In that code, we could see that the engine responsible for fetching metadata about files was a tool called [wappalyzer](https://github.com/AliasIO/wappalyzer) that was run with the code below, where `$targets[$i]` was a URL to a generated file for three home, about and contact pages.
+Although in the challenge we weren't provided with a complete source code of the backend server, there was a link to the source of `weaponlyzer` function [./weaponlyzer.php](./weaponlyzer.php). In that code, we could see that the engine responsible for fetching metadata about the pages was a tool called [wappalyzer](https://github.com/AliasIO/wappalyzer) that was run with the code below, where `$targets[$i]` was a URL to a generated file for three home, about and contact pages.
 
 ```php
 shell_exec('timeout -k 3s 20s wappalyzer -w 8 ' . escapeshellarg(escapeshellcmd($targets[$i])));
@@ -55,7 +55,7 @@ One important addition that can be spotted in the provided screenshot is the app
 
 Wappalyzer is generally known as a browser [extension](https://chrome.google.com/webstore/detail/wappalyzer/gppongmhjkpfnbhagpmjfkannfbllamg?hl=en) that identifies technologies used on websites. It has over 1M users in the store so one could say it's kind of popular. 
 
-There is a variation of it in the form of a standalone [npm package](https://www.npmjs.com/package/wappalyzer) which was also used in the challenge. The recent versions use a headless browser for dynamic analysis of the page, but with respect to the CSP for code execution. The tool heavily relies on regular expressions, available [here](https://github.com/AliasIO/wappalyzer/blob/dfe686e524345145bd6286de2148b87d83b575d4/src/apps.json), which authors managed to leverage and created a cool challenge about it as the result.
+There is a variation of it in the form of a standalone [npm package](https://www.npmjs.com/package/wappalyzer) which was also used in the challenge. The recent versions use a headless browser for dynamic analysis of the page, which respects the CSP for code execution. The tool heavily relies on regular expressions, available [here](https://github.com/AliasIO/wappalyzer/blob/dfe686e524345145bd6286de2148b87d83b575d4/src/apps.json), which the author managed to leverage and created a cool challenge about it as the result.
 
 
 
