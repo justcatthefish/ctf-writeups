@@ -19,12 +19,12 @@ Last weekend, our team took part in a cool CTF &mdash; Pwn2Win. We've got a pret
 
 ### Quick overview
 
-There are three functionalities in the web application presented to us by the authors: 
-- *content upload* of three different HTML pages: home, about and contact
-- *check service* that displays metadata about uploaded files when URL was provided
-- *bug report* that sends a generated HTML page to the admin for checking it with `wappalyzer`
+There are three functionalities in the web application provided by authors: 
+- *content upload* of three HTML pages: home, about and contact
+- *check service* that displays metadata about uploaded pages when URL was provided
+- *bug report* that allows to send a URL of a generated page to the admin
 
-Without exploiting any vulnerabilities, URLs of generated pages will not be displayed to the user, and because of that, *check service* and *bug reports* can't be used. This leads us to the first objective of the mission &mdash; **leak the URL of a generated page.**. 
+Without exploiting any vulnerabilities, URLs of generated pages will not be displayed to the user, and because of that, *check service* and *bug reports* can't be fully utilised. This leads us to the first objective of the mission &mdash; **leak the URL of a generated page.**. 
 
 
 ### Backend
@@ -42,13 +42,13 @@ shell_exec('timeout -k 3s 20s wappalyzer -w 8 ' . escapeshellarg(escapeshellcmd(
 } else {
 ```
 
-If calling `shell_exec` returns an empty string, we will see the URL of the page that triggered the error. One more very important observation that will come handy later on, is that the page and any following ones will not be removed from the disk. 
+If calling `shell_exec` returns an empty string, we will see the URL of the page that triggered the error. In addition to that, the page and the following ones will not be removed from the disk which would happen otherwise. This additional observation will come handy later on. 
 
-To achieve the goal of getting a URL of a generated page, we need to **make `wappalyzer` return nothing**. This can happen, e.g., if the `timeout` command kills the process after 20 seconds. We confirmed that by lowering the timeout from original `20s` to `1s` and firing the wappalyzer on a constantly loading page.
+To achieve the goal of getting a URL of a generated page, we need to **make `wappalyzer` return nothing**. This can happen, for example, if the `timeout` command kills the process after exceeded time of 20 seconds. We confirmed that by lowering the timeout from original `20s` to `1s` and firing the wappalyzer on a constantly loading page.
 
 ### Content Security Policy
 
-One important addition that can be spotted in the provided screenshot is the code appended to each page. It contains a very restrictive *Content Security Policy* set to `default-src: none` which prevents from executing arbitrary JavaScript code and is most likely not bypassable. 
+One important addition that can be spotted in the provided screenshot is the code appended to each page. It contains a very restrictive *Content Security Policy* in the `<meta>` tag set to `default-src: none`. This prevents us from executing arbitrary JavaScript code and is most likely not bypassable. 
 
 
 ### Wappalyzer
@@ -62,16 +62,16 @@ There is a variation of it in the form of a standalone [npm package](https://www
 ### Defensive strategies
 We could potentially abuse the page loading time by crafting a very long payload. To prevent that, each page could maximally consist of 1500 characters.
 
-Another implemented protection was blocking *meta redirect* that was supposed to block redirects to another pages. We crafted an unintentional bypass to that with `<meta http-equiv="refres&#x68;" content="1;https://example.org">` but we didn't find it useful in the final solution. The only advantage it gave us was discovering HTTP headers: `Referer: http://localhost/page/xxx` and `User-Agent`, indicating `Headless Chrome 80` browser from which the admin visited. 
+Another implemented protection was blocking *meta redirect* that was supposed to block redirects to other pages. We crafted an unintentional bypass to that with `<meta http-equiv="refres&#x68;" content="1;https://example.org">` but we didn't find it useful in the final solution. The only advantage it gave us was discovering HTTP headers: `Referer: http://localhost/page/xxx` and `User-Agent`, indicating `Headless Chrome 80` browser from which the admin visited. 
 
-The third protection was reCAPTCHA that was painful because we quickly ran out of available attempts. This was meant to prevent the application from being DDoS'ed through submissions.
+The third protection was a painful reCAPTCHA where we quickly ran out of available attempts. This was meant to prevent the application from being DDoS'ed through submissions.
 
 
 ### Front end
 
-It was the Vue.js application that mostly relies on the client-side. Although there was nothing specific in the source code it guided us with which direction we should take. 
+The front-end was [Vue.js](https://vuejs.org/) application that mostly relies on the client-side code. Although there was nothing specific in the source code it guided us to which direction we should take. 
 
-For instance, the snippet below hinted us that probably upon sending a link to the admin, it first runs checks on it before displaying the page. That is because of different types of token in the parameters, probably for bypassing the reCAPTCHA verification. 
+For instance, the snippet below hinted us that upon sending a link to the admin, it runs checks on it before displaying the page. That is because of two different types of a token in the parameters, probably for bypassing the reCAPTCHA verification. 
 
 ```js
     // we assume it was for admin
@@ -100,12 +100,12 @@ This meant that if there was an XSS, it was most likely here.
 
 ## Solution
 ### Idea
-With the prior research it was clear that we have to do two things:
+With the prior research it was clear that we have to perform two tasks:
 - attack the wappalyzer with [ReDos](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS) attack
 - trigger XSS on the *check* endpoint and send it to the admin
 
 ### Vulnerabilities
-We manually researched for interesting regular expressions in [./apps.json](apps.json) from over 1300 different ones. Of course not one by one, but with some clever assumptions. 
+We manually researched [./apps.json](apps.json) for interesting regular expressionss from over 1300 different ones. Of course not one by one, but with some more or less clever assumptions. 
 
 #### ReDoS
 
@@ -146,7 +146,7 @@ The regular expression can be visualized as:
 
 ![](./screenshots/redos.png)
 
-We can see that there is a double loop and a dot character matches both `None of: "/"` and `.`. This is exactly what we need to perform backtracking based ReDoS attack. With the payload including enough dots, we can achieve our goal with the below snippet.
+We can see that there is a double loop where a dot character matches both `None of: "/"` and `.`. This is exactly what we need to perform backtracking based [ReDoS](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS) attack. With the payload including enough dots, we can achieve our goal with the below snippet.
 
 ```html
 <script   
@@ -155,7 +155,7 @@ We can see that there is a double loop and a dot character matches both `None of
 ```
 
 
-We also found another vulnerable RegExp in `Carbon Ads` package which is almost the same as the above one, shown below.
+We also found another vulnerable RegExp in `Carbon Ads` package which is almost identical to the above one, shown below.
 
 ```json 
     "Carbon Ads": {
@@ -180,12 +180,12 @@ We managed to retrieve the URL for our single note, but when we submit it to the
 
 With enough attempts, we could probably create a note that is executing near the allowed time and therefore returns two different results with the same note. But would the admin spend over 20 seconds to wait for the page to load? We doubted it and went into researching other possibilities despite the fact that this solution would be even more beautiful in our opinion :)
 
-Now, the fact that other pages are not being removed comes really handy. We noticed that if we change the `-home.html` suffix in the URL of the `pages/b699e61f9d5ce40a7caa8d7b3e66be98979a5b9f838073a833739c8b3f54d726/fd8f9ba6ede0-home.html` page to `-about.html` we could see our 2nd page. Viola, that's exactly what we need. 
+Now, the fact that other pages are not being removed comes really handy. We noticed that if we change the `-home.html` suffix in the URL of the `pages/b699e61f9d5ce40a7caa8d7b3e66be98979a5b9f838073a833739c8b3f54d726/fd8f9ba6ede0-home.html` page to `-about.html` we could see our second page. Viola, that's exactly what we need. 
 
 #### Getting the XSS
 ![](./screenshots/alert.png)
 
-We've got all we needed but where was the XSS? We've analyzed a lot of expressions in the search for something that would allow us to inject `<>` characters. There are a lot of rules like
+We've got all we needed but where was the XSS? We've analyzed a lot of expressions in the search for something that would allow us to inject `<>` characters. There are dozens of rules in form of `(.+)`, for example the two below. 
 
 ```json
 {
@@ -212,7 +212,7 @@ Looks like simple injection right? We first tried with the code below but had no
 </script>
 ```
 
-Although it worked locally, we quickly discovered that because of the CSP the code will not be evaluated on the challenge. This is because the driver evaluates scripts from the page and then looks if the variable was defined [here](https://github.com/AliasIO/wappalyzer/blob/dfe686e524345145bd6286de2148b87d83b575d4/src/drivers/npm/driver.js#L386)
+Although it worked locally, we quickly discovered that because of the CSP, the code will not be evaluated on the challenge. This is because the driver [evaluates scripts](https://github.com/AliasIO/wappalyzer/blob/dfe686e524345145bd6286de2148b87d83b575d4/src/drivers/npm/driver.js#L386) from the page and then looks if the variable was defined.
 
 ```js
 const js = processJs(
@@ -221,7 +221,7 @@ const js = processJs(
 )
 ```
 
-But the CSP blocks script evaluation and because of that, it will fail. 
+But the attached CSP blocks script evaluation and because of that, it will fail. 
 
 What about `<meta>` tag? Simple code below should get us an XSS, right?
 
@@ -238,7 +238,7 @@ Nope, it didn't work. After investigation we learned that meta tags are parsed w
 const regex = /<meta[^>]+>/gi
 ```
 
-With these two observations we stopped looking at the `js` and `meta` properties and focused on other resources. After some time we discovered the package with a very interesting RegExp. 
+With these two observations we stopped looking at the `js` and `meta` properties and focused on other resources. After some time we discovered the *AppDynamics* package with a very interesting RegExp. 
 
 
 ```json 
@@ -252,7 +252,7 @@ With these two observations we stopped looking at the `js` and `meta` properties
     },
 ```
 
-Which is visualized on the image below. 
+The expression aboce is visualized on the image below. 
 
 ![](./screenshots/xss_regex.png)
 
@@ -266,7 +266,7 @@ After `adrum.1` prefix, we can add any payload as long as it ends with `.js` suf
 <!-- it returns http://example.org/adrum.1%3Cu%3Efoo.js -->
 ```
 
-Although it looks like a dead at the first glance, we knew a bypass to this already and which is a custom protocol that does not support percent-encoding. One of them is `cid:`, so by sending the below payload the alert pops out.
+Although it looks like a dead at the first glance, we knew a bypass to this already and which is a custom protocol that does not enforce percent-encoding. One of them is `cid:`, so by sending the below payload the alert pops out.
 
 
 ```html
