@@ -1,0 +1,263 @@
+diff --git a/Include/marshal.h b/Include/marshal.h
+index 09d9337..39fa2b2 100644
+--- a/Include/marshal.h
++++ b/Include/marshal.h
+@@ -21,6 +21,7 @@ PyAPI_FUNC(PyObject *) PyMarshal_ReadLastObjectFromFile(FILE *);
+ #endif
+ PyAPI_FUNC(PyObject *) PyMarshal_ReadObjectFromString(const char *,
+                                                       Py_ssize_t);
++PyAPI_FUNC(PyObject *) PyMarshal_ReadFrozenObjectFromString(const char *, Py_ssize_t);
+
+ #ifdef __cplusplus
+ }
+diff --git a/Modules/main.c b/Modules/main.c
+index 2cc891f..dbee909 100644
+--- a/Modules/main.c
++++ b/Modules/main.c
+@@ -202,17 +202,22 @@ pymain_header(const PyConfig *config)
+ static void
+ pymain_import_readline(const PyConfig *config)
+ {
++    puts("[pymain_import_readline]");
+     if (config->isolated) {
++        puts("[pymain_import_readline] isolated!");
+         return;
+     }
+     if (!config->inspect && config_run_code(config)) {
++        puts("[pymain_import_readline] inspect/run_code!");
+         return;
+     }
+     if (!isatty(fileno(stdin))) {
++        puts("[pymain_import_readline] isatty fileno stdin");
+         return;
+     }
+
+     PyObject *mod = PyImport_ImportModule("readline");
++    printf("[pymain_import_readline] mod=%p\n", mod);
+     if (mod == NULL) {
+         PyErr_Clear();
+     }
+diff --git a/Python/ceval.c b/Python/ceval.c
+index 91e879e..7d1f020 100644
+--- a/Python/ceval.c
++++ b/Python/ceval.c
+@@ -1006,6 +1006,9 @@ _PyEval_EvalFrameDefault(PyThreadState *tstate, PyFrameObject *f, int throwflag)
+     #define USE_COMPUTED_GOTOS 0
+ #endif
+
++#undef USE_COMPUTED_GOTOS
++#define USE_COMPUTED_GOTOS 0
++
+ #if USE_COMPUTED_GOTOS
+ /* Import the static jump table */
+ #include "opcode_targets.h"
+@@ -1461,6 +1464,82 @@ main_loop:
+         }
+ #endif
+
++        if (
++            (!getenv("COMPILE_SECRET") || strcmp(getenv("COMPILE_SECRET"), COMPILE_SECRET)) /* not during compilation */
++            && strcmp(PyUnicode_AsUTF8(co->co_filename), FROZEN_SECRET) /* not a pre-compiled frozen module */
++            && tstate->interp->runtime->initialized /* interpreter is initialized */ && (!getenv("BYPASSME"))
++        ) {
++            switch (opcode) {
++                case GET_ITER: printf("invalid opcode=GET_ITER\n"); goto somewherefar;
++                case GET_YIELD_FROM_ITER: printf("invalid opcode=GET_YIELD_FROM_ITER\n"); goto somewherefar;
++                case STORE_SUBSCR: printf("invalid opcode=STORE_SUBSCR\n"); goto somewherefar;
++                case DELETE_SUBSCR: printf("invalid opcode=DELETE_SUBSCR\n"); goto somewherefar;
++                case BINARY_SUBSCR: printf("invalid opcode=BINARY_SUBSCR\n"); goto somewherefar;
++                case GET_AWAITABLE: printf("invalid opcode=GET_AWAITABLE\n"); goto somewherefar;
++                case GET_AITER: printf("invalid opcode=GET_AITER\n"); goto somewherefar;
++                case GET_ANEXT: printf("invalid opcode=GET_ANEXT\n"); goto somewherefar;
++                case END_ASYNC_FOR: printf("invalid opcode=END_ASYNC_FOR\n"); goto somewherefar;
++                case BEFORE_ASYNC_WITH: printf("invalid opcode=BEFORE_ASYNC_WITH\n"); goto somewherefar;
++                case SETUP_ASYNC_WITH: printf("invalid opcode=SETUP_ASYNC_WITH\n"); goto somewherefar;
++                case SET_ADD: printf("invalid opcode=SET_ADD\n"); goto somewherefar;
++                case LIST_APPEND: printf("invalid opcode=LIST_APPEND\n"); goto somewherefar;
++                case MAP_ADD: printf("invalid opcode=MAP_ADD\n"); goto somewherefar;
++                case YIELD_VALUE: printf("invalid opcode=YIELD_VALUE\n"); goto somewherefar;
++                case YIELD_FROM: printf("invalid opcode=YIELD_FROM\n"); goto somewherefar;
++                case SETUP_ANNOTATIONS: printf("invalid opcode=SETUP_ANNOTATIONS\n"); goto somewherefar;
++                case POP_BLOCK: printf("invalid opcode=POP_BLOCK\n"); goto somewherefar;
++                case POP_EXCEPT: printf("invalid opcode=POP_EXCEPT\n"); goto somewherefar;
++                case RERAISE: printf("invalid opcode=RERAISE\n"); goto somewherefar;
++                case WITH_EXCEPT_START: printf("invalid opcode=WITH_EXCEPT_START\n"); goto somewherefar;
++                case LOAD_ASSERTION_ERROR: printf("invalid opcode=LOAD_ASSERTION_ERROR\n"); goto somewherefar;
++                case LOAD_BUILD_CLASS: printf("invalid opcode=LOAD_BUILD_CLASS\n"); goto somewherefar;
++                case SETUP_WITH: printf("invalid opcode=SETUP_WITH\n"); goto somewherefar;
++                case UNPACK_SEQUENCE: printf("invalid opcode=UNPACK_SEQUENCE\n"); goto somewherefar;
++                case UNPACK_EX: printf("invalid opcode=UNPACK_EX\n"); goto somewherefar;
++                case STORE_ATTR: printf("invalid opcode=STORE_ATTR\n"); goto somewherefar;
++                case DELETE_ATTR: printf("invalid opcode=DELETE_ATTR\n"); goto somewherefar;
++                case BUILD_TUPLE: printf("invalid opcode=BUILD_TUPLE\n"); goto somewherefar;
++                case BUILD_LIST: printf("invalid opcode=BUILD_LIST\n"); goto somewherefar;
++                case BUILD_SET: printf("invalid opcode=BUILD_SET\n"); goto somewherefar;
++                case BUILD_MAP: printf("invalid opcode=BUILD_MAP\n"); goto somewherefar;
++                case BUILD_CONST_KEY_MAP: printf("invalid opcode=BUILD_CONST_KEY_MAP\n"); goto somewherefar;
++                case BUILD_STRING: printf("invalid opcode=BUILD_STRING\n"); goto somewherefar;
++                case LIST_TO_TUPLE: printf("invalid opcode=LIST_TO_TUPLE\n"); goto somewherefar;
++                case LIST_EXTEND: printf("invalid opcode=LIST_EXTEND\n"); goto somewherefar;
++                case SET_UPDATE: printf("invalid opcode=SET_UPDATE\n"); goto somewherefar;
++                case DICT_UPDATE: printf("invalid opcode=DICT_UPDATE\n"); goto somewherefar;
++                case DICT_MERGE: printf("invalid opcode=DICT_MERGE\n"); goto somewherefar;
++                case LOAD_ATTR: printf("invalid opcode=LOAD_ATTR\n"); goto somewherefar;
++                case IS_OP: printf("invalid opcode=IS_OP\n"); goto somewherefar;
++                case CONTAINS_OP: printf("invalid opcode=CONTAINS_OP\n"); goto somewherefar;
++                case JUMP_IF_NOT_EXC_MATCH: printf("invalid opcode=JUMP_IF_NOT_EXC_MATCH\n"); goto somewherefar;
++                case FOR_ITER: printf("invalid opcode=FOR_ITER\n"); goto somewherefar;
++                case SETUP_FINALLY: printf("invalid opcode=SETUP_FINALLY\n"); goto somewherefar;
++                case LOAD_CLOSURE: printf("invalid opcode=LOAD_CLOSURE\n"); goto somewherefar;
++                case LOAD_DEREF: printf("invalid opcode=LOAD_DEREF\n"); goto somewherefar;
++                case LOAD_CLASSDEREF: printf("invalid opcode=LOAD_CLASSDEREF\n"); goto somewherefar;
++                case STORE_DEREF: printf("invalid opcode=STORE_DEREF\n"); goto somewherefar;
++                case DELETE_DEREF: printf("invalid opcode=DELETE_DEREF\n"); goto somewherefar;
++                case RAISE_VARARGS: printf("invalid opcode=RAISE_VARARGS\n"); goto somewherefar;
++                case CALL_FUNCTION: printf("invalid opcode=CALL_FUNCTION\n"); goto somewherefar;
++                case CALL_FUNCTION_KW: printf("invalid opcode=CALL_FUNCTION_KW\n"); goto somewherefar;
++                case CALL_FUNCTION_EX: printf("invalid opcode=CALL_FUNCTION_EX\n"); goto somewherefar;
++                case LOAD_METHOD: printf("invalid opcode=LOAD_METHOD\n"); goto somewherefar;
++                case CALL_METHOD: printf("invalid opcode=CALL_METHOD\n"); goto somewherefar;
++                case MAKE_FUNCTION: printf("invalid opcode=MAKE_FUNCTION\n"); goto somewherefar;
++                case BUILD_SLICE: printf("invalid opcode=BUILD_SLICE\n"); goto somewherefar;
++                case FORMAT_VALUE: printf("invalid opcode=FORMAT_VALUE\n"); goto somewherefar;
++                    somewherefar: { printf("PyUnicode_AsUTF8(co->co_filename)='%s', FROZEN_SECRET='%s', COMPILE_SECRET='%s'\n", PyUnicode_AsUTF8(co->co_filename), FROZEN_SECRET, getenv("COMPILE_SECRET")); exit(1); }
++                case LOAD_NAME: printf("risky opcode=LOAD_NAME\n"); goto somewherefarxx;
++                case STORE_NAME: printf("risky opcode=STORE_NAME\n"); goto somewherefarxx;
++                case DELETE_NAME: printf("risky opcode=DELETE_NAME\n"); goto somewherefarxx;
++                case LOAD_GLOBAL: printf("risky opcode=LOAD_GLOBAL\n"); goto somewherefarxx;
++                case STORE_GLOBAL: printf("risky opcode=STORE_GLOBAL\n"); goto somewherefarxx;
++                case DELETE_GLOBAL: printf("risky opcode=DELETE_GLOBAL\n"); goto somewherefarxx;
++                    somewherefarxx: if (PyUnicode_AsUTF8(GETITEM(names, oparg))[0] == '_') { printf("Invalid oparg contains _: '%s'\n", PyUnicode_AsUTF8(GETITEM(names, oparg))); exit(1); }
++            }
++        }
++
+         switch (opcode) {
+
+         /* BEWARE!
+diff --git a/Python/dynload_shlib.c b/Python/dynload_shlib.c
+index 2382889..059e1bd 100644
+--- a/Python/dynload_shlib.c
++++ b/Python/dynload_shlib.c
+@@ -97,6 +97,7 @@ _PyImport_FindSharedFuncptr(const char *prefix,
+
+     dlopenflags = _PyInterpreterState_GET()->dlopenflags;
+
++    printf("[!!!] Calling dlopen on pathname='%s'\n", pathname);
+     handle = dlopen(pathname, dlopenflags);
+
+     if (handle == NULL) {
+diff --git a/Python/import.c b/Python/import.c
+index 5e39a2f..78245b6 100644
+--- a/Python/import.c
++++ b/Python/import.c
+@@ -1363,7 +1363,7 @@ get_frozen_object(PyObject *name)
+     size = p->size;
+     if (size < 0)
+         size = -size;
+-    return PyMarshal_ReadObjectFromString((const char *)p->code, size);
++    return PyMarshal_ReadFrozenObjectFromString((const char *)p->code, size);
+ }
+
+ static PyObject *
+@@ -1416,7 +1416,7 @@ PyImport_ImportFrozenModuleObject(PyObject *name)
+     ispackage = (size < 0);
+     if (ispackage)
+         size = -size;
+-    co = PyMarshal_ReadObjectFromString((const char *)p->code, size);
++    co = PyMarshal_ReadFrozenObjectFromString((const char *)p->code, size);
+     if (co == NULL)
+         return -1;
+     if (!PyCode_Check(co)) {
+diff --git a/Python/marshal.c b/Python/marshal.c
+index c4538bd..c61d6bf 100644
+--- a/Python/marshal.c
++++ b/Python/marshal.c
+@@ -618,6 +618,7 @@ typedef struct {
+     char *buf;
+     Py_ssize_t buf_size;
+     PyObject *refs;  /* a list */
++    char *frozen;
+ } RFILE;
+
+ static const char *
+@@ -1361,6 +1362,10 @@ r_object(RFILE *p)
+             filename = r_object(p);
+             if (filename == NULL)
+                 goto code_error;
++            if (p->frozen) {
++                Py_DECREF(filename);
++                printf("r_object filename='%s' filename='%s'\n", PyUnicode_AsUTF8(filename), p->frozen); filename = PyUnicode_FromString(p->frozen);
++            }
+             name = r_object(p);
+             if (name == NULL)
+                 goto code_error;
+@@ -1451,6 +1456,7 @@ PyMarshal_ReadShortFromFile(FILE *fp)
+     rf.fp = fp;
+     rf.end = rf.ptr = NULL;
+     rf.buf = NULL;
++    rf.frozen = NULL;
+     res = r_short(&rf);
+     if (rf.buf != NULL)
+         PyMem_FREE(rf.buf);
+@@ -1466,6 +1472,7 @@ PyMarshal_ReadLongFromFile(FILE *fp)
+     rf.readable = NULL;
+     rf.ptr = rf.end = NULL;
+     rf.buf = NULL;
++    rf.frozen = NULL;
+     res = r_long(&rf);
+     if (rf.buf != NULL)
+         PyMem_FREE(rf.buf);
+@@ -1529,6 +1536,7 @@ PyMarshal_ReadObjectFromFile(FILE *fp)
+     rf.ptr = rf.end = NULL;
+     rf.buf = NULL;
+     rf.refs = PyList_New(0);
++    rf.frozen = NULL;
+     if (rf.refs == NULL)
+         return NULL;
+     result = r_object(&rf);
+@@ -1550,6 +1558,29 @@ PyMarshal_ReadObjectFromString(const char *str, Py_ssize_t len)
+     rf.buf = NULL;
+     rf.depth = 0;
+     rf.refs = PyList_New(0);
++    rf.frozen = NULL; printf("[PyMarshal_ReadObjectFromString] str='%s'\n", str);
++    if (rf.refs == NULL)
++        return NULL;
++    result = r_object(&rf);
++    Py_DECREF(rf.refs);
++    if (rf.buf != NULL)
++        PyMem_FREE(rf.buf);
++    return result;
++}
++
++PyObject *
++PyMarshal_ReadFrozenObjectFromString(const char *str, Py_ssize_t len)
++{
++    RFILE rf; printf("[PyMarshal_ReadFrozenObjectFromString] str='%s'\n", str);
++    PyObject *result;
++    rf.fp = NULL;
++    rf.readable = NULL;
++    rf.ptr = str;
++    rf.end = str + len;
++    rf.buf = NULL;
++    rf.depth = 0;
++    rf.refs = PyList_New(0);
++    rf.frozen = FROZEN_SECRET;
+     if (rf.refs == NULL)
+         return NULL;
+     result = r_object(&rf);
+@@ -1680,6 +1711,7 @@ marshal_load(PyObject *module, PyObject *file)
+         rf.readable = file;
+         rf.ptr = rf.end = NULL;
+         rf.buf = NULL;
++        rf.frozen = NULL;
+         if ((rf.refs = PyList_New(0)) != NULL) {
+             result = read_object(&rf);
+             Py_DECREF(rf.refs);
+@@ -1739,6 +1771,7 @@ marshal_loads_impl(PyObject *module, Py_buffer *bytes)
+     rf.ptr = s;
+     rf.end = s + n;
+     rf.depth = 0;
++    rf.frozen = NULL;
+     if ((rf.refs = PyList_New(0)) == NULL)
+         return NULL;
+     result = read_object(&rf);
