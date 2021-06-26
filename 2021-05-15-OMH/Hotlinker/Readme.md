@@ -1,6 +1,6 @@
 # OMH CTF 2021 - Hotlinker (web, forensic, crypto)
 
-Solved by [Xert](https://github.com/XertDev) & [Rivit](https://github.com/rivit98n)
+Solved by [Xert](https://github.com/XertDev) & [Rivit](https://github.com/rivit98)
 
 In this challenge, we were given an application that can download and host images for us.
 
