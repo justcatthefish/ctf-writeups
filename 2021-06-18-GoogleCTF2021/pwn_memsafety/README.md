@@ -1,4 +1,23 @@
-Exploit for the Memsafety Google CTF 2021 challenge:
+# Memsafety challenge
+
+Task description:
+```
+Provide a snippet of Rust code to run as an app in our edge compute.
+We created a sandbox that doesn't allow any unsafe code and limits
+what can be run, so we can be sure the different apps are well
+isolated.
+
+⇥Attachment
+memsafety.2021.ctfcompetition.com 1337
+```
+* The task was solved by 49 teams
+* The attachment aka the "public" part that the CTF participants got can be seen here: https://github.com/google/google-ctf/tree/master/2021/quals/pwn-memsafety/attachments
+* For intended solution and task sources see https://github.com/google/google-ctf/tree/master/2021/quals/pwn-memsafety
+
+
+# Our unintended solution
+
+TL;DR: We just finished the`pub mod user {` module and created another one that caused the compilation error and was not checked by the AST(?) nodes visitor sandbox/checker.
 
 ```python
 from pwn import *
