@@ -110,7 +110,7 @@ from the source code of the application itself:
 
 The hash fragment is deleted upon the page loads so we couldn't pass the URL to 
 the admin directly. Luckily we can alter the hash fragment after execution 
-of deletion leveraging `iframe` or top navigation - `window.open`. First, we tried 
+of deletion leveraging `iframe` or top-level navigation - `window.open`. First, we tried 
 `iframe`s, however, we quickly realized that it won't gib flags.
 
 Looking at the code of the admin:
