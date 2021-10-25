@@ -88,11 +88,43 @@ reduced back to 2.
 In order to minimize the chance of someone getting a nonce between our nonces,
 we just sent the string
 `GET / HTTP/1.1<CRLF><CRLF>GET / HTTP/1.1<CRLF><CRLF>GET / HTTP/1.1<CRLF><CRLF>`
-over a TCP connection to the server, taking advantage of request pipelining.
+over a TCP connection to the server, taking advantage of HTTP pipelining.
 It works quite well, and gives the correct results once in 4 times on average.
 
 ## The web part
 
 *by [haqpl](//haqpl.github.io)*
 
-to be filled in
+Having predicted the nonce we only needed to overcome one additional limitation resulting 
+from the source code of the application itself:
+
+```html
+    <script nonce="dkcyhcb6yo61lkfg">
+    	document.location.hash = "";
+    	window.onhashchange = ()=>{
+    		if(document.location.hash) desc.innerHTML = decodeURIComponent(document.location.hash.slice(1));
+    		document.location.hash = "";
+    	};
+    </script>
+```
+
+The hash fragment is deleted upon the page loads so we couldn't pass the URL to 
+the admin directly. Luckily we can alter the hash fragment after execution 
+of deletion leveraging `iframe` or top navigation - `window.open`. First, we tried 
+`iframe`s, however, we quickly realized that it won't gib flags.
+
+Looking at the code of the admin:
+
+```py
+		await page.setCookie({
+			name: 'flag',
+			value: process.env.FLAG || "flag{fake-flag}",
+			domain: "localhost",
+			expires: now() + 1000,
+		});
+```
+
+we realized that Cookie containing the flag has no `sameSite` attribute set meaning 
+that its default `LaX` and therefore won't be sent in a few cases, including ours - `iframe`.
+
+That left us with top-level navigation which worked like a charm.
