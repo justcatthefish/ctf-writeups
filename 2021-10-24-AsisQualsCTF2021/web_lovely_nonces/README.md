@@ -99,13 +99,13 @@ Having predicted the nonce we only needed to overcome one additional limitation 
 from the source code of the application itself:
 
 ```html
-    <script nonce="dkcyhcb6yo61lkfg">
+<script nonce="dkcyhcb6yo61lkfg">
     	document.location.hash = "";
     	window.onhashchange = ()=>{
     		if(document.location.hash) desc.innerHTML = decodeURIComponent(document.location.hash.slice(1));
     		document.location.hash = "";
-    	};
-    </script>
+	};
+</script>
 ```
 
 The hash fragment is deleted upon the page loads so we couldn't pass the URL to 
@@ -116,12 +116,12 @@ of deletion leveraging `iframe` or top navigation - `window.open`. First, we tri
 Looking at the code of the admin:
 
 ```py
-		await page.setCookie({
-			name: 'flag',
-			value: process.env.FLAG || "flag{fake-flag}",
-			domain: "localhost",
-			expires: now() + 1000,
-		});
+await page.setCookie({
+	name: 'flag',
+	value: process.env.FLAG || "flag{fake-flag}",
+	domain: "localhost",
+	expires: now() + 1000,
+});
 ```
 
 we realized that Cookie containing the flag has no `sameSite` attribute set meaning 
