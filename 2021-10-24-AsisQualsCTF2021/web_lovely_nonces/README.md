@@ -93,7 +93,7 @@ It works quite well, and gives the correct results once in 4 times on average.
 
 ## The web part
 
-*by [haqpl](//haqpl.github.io)*
+*by [haqpl](//twitter.com/haqpl)*
 
 Having predicted the nonce we only needed to overcome one additional limitation resulting 
 from the source code of the application itself:
