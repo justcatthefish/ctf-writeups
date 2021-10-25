@@ -124,7 +124,7 @@ await page.setCookie({
 });
 ```
 
-we realized that Cookie containing the flag has no `sameSite` attribute set meaning 
-that its default `LaX` and therefore won't be sent in a few cases, including ours - `iframe`.
+we realized that Cookie containing the flag has no `SameSite` attribute set meaning 
+that its default `Lax` and therefore won't be sent in a few cases, including ours - `iframe`.
 
 That left us with top-level navigation which worked like a charm.
