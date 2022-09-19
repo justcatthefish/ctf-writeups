@@ -595,7 +595,7 @@ This means we would need to somehow place another executable on the system, as I
 So, this leaves us with one idea. `/proc/{pid}/exe` for the processes spawned by the challenge points to something Linux considers a valid file. We could use the challenge to spawn an executable that would hang, then create another connection that would guess the PID of that process and use the `/proc/{pid}/exe` executable as the "linker".
 The "linker" executable would contain all of the relevant code, and then the ELFs sent later would only point at it as the dynamic linker and contain the random data plus hashes. 
 
-The first problem was figuring out why our minimal executables cannot be used as a linker (cause SIGSEGV before you can attach gdb to the process). This is apparently because a PHDR with a LOAD for RW segment is required for the linker. I figured this out by compiling a minimal random executable. Then I removed the SHDR info from the header, and the executable still functioned as a linker. Afterwards I decremented the number of PHDRs until it no longer worked and managed to narrow it down to that LOAD PHDR.  
+The first problem was figuring out why our minimal executables cannot be used as a linker (cause SIGSEGV before you can attach gdb to the process). This is apparently because a PHDR with a LOAD for RW segment is required for the linker. I figured this out by compiling a small random executable with gcc. Then I removed the SHDR info from the header, and the executable still functioned as a linker. Afterwards I decremented the number of PHDRs until it no longer worked and managed to narrow it down to a LOAD PHDR for a RW segment.
 
 The second problem was checking whether we are running as a linker - we want the linker executable PID to stay as constant as possible, therefore immediately crashing would not be optimal.
 This can be done by finding the value for the aux vector AT_ENTRY and checking whether it lower than the load address of the linker (the main binary has a load address of 0x28000 and the linker 0x50000). If we are running standalone, the code enters a loop and runs for ~1s before it is killed due to exhausting a resource limit.
@@ -607,7 +607,7 @@ nasm -f bin -o flag4_main flag4_main.asm
 ```
 Then we can run `python3 flag4_interp.py` in one terminal, and `python3 flag4_main.py $(pgrep ^3$)` in another.
 
-Now we get to the last and bigger challenge, which is guessing the PID on remote. I tried to have a loop guessing the PID but due to the amount of processes spawning I was not able to guess it this way.
+Now we get to the last and biggest challenge, which is guessing the PID on remote. I tried to have a loop guessing the PID but due to the amount of processes spawning I was not able to guess it this way.
 I ended up recreating the container in which the challenge was running via the web page and bruteforcing the PIDs manually expecting them to be low. I ended up with a successful run at PID 8, with this following badly written script:
 ```py
 from flag4_interp import do_interp
