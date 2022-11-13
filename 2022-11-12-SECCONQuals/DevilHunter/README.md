@@ -81,7 +81,7 @@ assert p7[0] == 0x739e80a2
 def F2:
 // i - 2, j - 1
 int64 j = 0xacab3c0;
-for (int i = 0; i < 25; i++) {
+for (int i = 0; i < 4; i++) {
   v9 = (arg >> (i * 8)) & 0xff;
   j = ((v9 ^ j) << 8) | (j >> 24);
 }
@@ -92,7 +92,7 @@ My modified version of the bcir can be found in `bcir_modified.txt`.
 
 ## Figuring out the flag
 
-F2 does some sort of a hash, but as it works on a 32-bit integer it can be bruteforced rather fast.
+F2 does some bit transformations, which shouldn't be problematic to reverse. However, I initially thought the `F2` function did sort of a hash (I thought it iterates to 25), and instead bruteforced it (as it works on a 32-bit integer it can be bruteforced rather fast).
 I rewrote the pseudocode in C++ and managed to get it to print out the flag. An important fact is that the code starts reading at index 7 which means the flag doesn't start with "SECCON{" which needs to be manually prepended.
 
 The code to bruteforce can be found in solve.cpp.
