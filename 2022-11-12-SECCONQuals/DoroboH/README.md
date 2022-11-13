@@ -115,19 +115,19 @@ I also did a quick look at the other functions and initializers to make sure the
 
 The `__IAT_start__` function call is weird and is caused by symbol overlap, it is actually a call to `CryptAcquireContextA`.
 
-This program does some kind of key exchange with the attacker's server (located in LAN, so even if you ran this program nothing terrible should have happened), then receives messages from the attacker, each prefixed with 4 byte length, decrypts them and executed cmd.exe with the content. The difficulty is presumably decrypting the received messages. The key exchange also uses messages prefixed with 4 byte lengths. The IP of the attacker server is `192.168.3.6`.
+This program does some kind of key exchange with the attacker's server (located in LAN, so even if you ran this program nothing terrible should have happened), then receives messages from the attacker, each prefixed with a 4 byte length, decrypts them and executes cmd.exe with the content. The difficulty is presumably decrypting the received messages. The key exchange also uses messages prefixed with 4 byte lengths (one message from the client followed by a reply from the server). The IP of the attacker server is `192.168.3.6`.
 
-My first idea was to maybe extract the key data from memory, but a quick look at the decompilation for the relevant method and the Wine source code revealed that this would be rather difficult due to multiple levels of indirection.
+My first idea was to maybe extract the key data from memory, but a quick look at the decompilation for `CryptDecrypt` and the Wine source code revealed that this would be rather difficult due to multiple levels of pointer indirection. It was indeed quite difficult, as the author of the task confirmed after the CTF it'd require reverse engineering quite a large part of the crypt provider's internals.
 
-I instead remembered that I have seen a tool that can be used to emulate a minidump, so I decided to try to find it. The tool can be found at https://github.com/mrexodia/dumpulator. The idea is to call the `CryptDecrypt` function in the dump with the packet contents, with the pointer to the key.
+I instead remembered that I have seen a tool that can be used to emulate a minidump, so I decided to try to find it. The tool can be found at https://github.com/mrexodia/dumpulator. The idea is to call the `CryptDecrypt` function in the dump with the packet contents, with the key already present in the dump's memory.
 
 ## Dump analysis
 
 We need to find the neccessary function offsets and the address of the `hKey` variable in the dump.
 
-I loaded the dump into IDA Pro, used "Jump to address" to navigate to `0x401550`, defined a function there, and then navigated to the first call site in the araiguma binary from the Stack trace view (which can be opened using Debugger -> Debugger windows). While the imported functions are still unnamed, and this probably could be fixed somehow, this was not a big problem for me as I had the import names in the IDA with the actual binary.
+I loaded the dump into IDA Pro, used "Jump to address" to navigate to `0x401550`, defined a function there, and then navigated to the first call site in the araiguma binary from the Stack trace view (which can be opened using Debugger -> Debugger windows). While the imported functions are still unnamed, and this probably could be fixed somehow, it was not a big problem for me as I had the import names in the IDA with the actual binary.
 
-We can see that we are waiting on the innermost `rev` call, after the key exchange has been completed. This means we need to get the `hKey` pointer. Unfortunately, IDA seems not to be able to unroll the stack automatically, or at least I don't know how to make it do that, so double clicking the pointer in the decompiler view does not give the correct address. I instead manually unrolled the stack pointer (all the functions on the stack had bp-frames so the saved rbp pointer was always before the return value for all the relevant functions) and found the key's pointer to be `0xF62E0`. Finding the address of `CryptDecrypt` can be done by just copying the function address from IDA Pro (and it is `0x7FFA9E0BF410`).
+We can see that we are waiting on the innermost `recv` call, after the key exchange has been completed. This means we need to get the `hKey` pointer. Unfortunately, IDA seems not to be able to unroll the stack automatically, or at least I don't know how to make it do that, so double clicking the pointer in the decompiler view does not give the correct address. I instead manually unrolled the stack pointer (all the functions on the stack had bp-frames so the saved rbp pointer was always before the return value for all the relevant functions) and found the key's pointer to be `0xF62E0`. Finding the address of `CryptDecrypt` can be done by just copying the function address from IDA Pro (and it is `0x7FFA9E0BF410`).
 
 ## Packet analysis
 
