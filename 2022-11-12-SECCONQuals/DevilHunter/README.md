@@ -48,17 +48,17 @@ Alright, `-printbcir` it is then. This generated a pretty long file. It can be f
 
 ## Analyzing the bytecode
 
-I had trouble understanding this bytecode at first. Also, the constants are unfortunately not automatically extracted from the table and need to be manually references. I had copied over some of the constants over to the text file so that I don't get lost.
+I had trouble understanding this bytecode at first. Also, the constants are unfortunately not automatically extracted from the table and need to be manually referenced. I had copied over some of the constants over to the text file so that I don't get lost.
 
-To understand the meaning of the instruction I referenced the VM source code (https://github.com/Cisco-Talos/clamav/blob/317153435e3190cc997fdf032518c68d4408c35c/libclamav/bytecode_vm.c) and the decode in the parseBB function in bytecode.c (https://github.com/Cisco-Talos/clamav/blob/317153435e3190cc997fdf032518c68d4408c35c/libclamav/bytecode.c).
+To understand the meaning of the instruction I referenced the VM source code (https://github.com/Cisco-Talos/clamav/blob/317153435e3190cc997fdf032518c68d4408c35c/libclamav/bytecode_vm.c) and the decoding code in the parseBB function in bytecode.c (https://github.com/Cisco-Talos/clamav/blob/317153435e3190cc997fdf032518c68d4408c35c/libclamav/bytecode.c).
 
-Some instructions and the meaning I deduced based on the source code and what made sense to me:
+Here are some instructions and the meaning I deduced based on the source code and what made sense to me:
 - `OP_BC_GEPZ` - `rD = gepz p.rA + (rB)` - `rD = rA + rB`, where `A` has to be a pointer (similar to `ldr D, [A+B]`)
 - `OP_BC_GEP1` - `rD = gep1 p.rA + (rB * C)` - `rD = rA + rB * C` where `A` has to be a pointer (similar to `ldr D, [A+B*C]`), however I'm not quite sure why `C` is `65` in most places where it should be `1`.
 - `OP_BC_COPY` - `cp rA -> rD` - `rD = rA` (similar to `mov A, D`)
 - `OP_BC_TRUNC` - `rD = rA & MASK` (can be used to move a value from a larger "register", to a smaller one, eg. from int64 -> int32)
 
-There are no "registers", however I still call them as such, as that's the closest name I know. By a register, I am referring to the indexes that refer to a parameter, local or constant, that are dumped before the function body.
+There are no real "registers", however I still call them as such, as that's the closest name I know. By a register, I am referring to the indexes that refer to a parameter, local or constant (that are dumped before the function body).
 It is important that the intructions can operate on varying data sizes, and the size of the data being operated on depends on the "register" size.
 
 As the function code was rather short, I decided to deal with this annoying repesentation and not to make my own tool for it. I manually wrote a rough psuedocode:
@@ -93,6 +93,6 @@ My modified version of the bcir can be found in `bcir_modified.txt`.
 ## Figuring out the flag
 
 F2 does some sort of a hash, but as it works on a 32-bit integer it can be bruteforced rather fast.
-I rewrote the pseudocode in C++ and managed to get it to print out the flag. An important fact is that the code starts reading at index 7 which means the flag doens't start with "SECCON{" which needs to be manually prepended.
+I rewrote the pseudocode in C++ and managed to get it to print out the flag. An important fact is that the code starts reading at index 7 which means the flag doesn't start with "SECCON{" which needs to be manually prepended.
 
 The code to bruteforce can be found in solve.cpp.
