@@ -459,7 +459,13 @@ At `1dd7` we have a switch with the expected encrypted values for each block of 
 
 After the CTF, it has been revealed that this is a TWINE Cipher, and that this information could have been found by searching for the constants. I tried to search for the constants during the CTF but did not manage to find this cipher unfortunately. As such I assumed this is a custom cipher, and proceeded to reverse engineer it.
 
-As scary as this code looks, if we think of the operations as if they were done to a 16 byte array instead of the two 64-bit values, they are much simpler. Here is the code that I wrote that performs the same operations (which I verifed using a debugger):
+As scary as this code looks, if we think of the operations as if they were done to a 16 byte array instead of the two 64-bit values, they are much simpler. In addition, the operations are quite similar.
+
+For the xor part, we can notice that the operations are basically the same, other than the differences in offsets. In addition, the operations on the second 64-bit value are basically identical to the ones done of the first one offset-wise, with the only difference being the different positions in keyExpanded.
+
+After reverse engineering 3 operations in the shuffle part (which I did not yet know what it does at the time), I thought that this is likely a shuffle and breakpointed before and after this code with gdb. In the first breakpoint I set rdx = 0x0706050403020100, rcx = 0x0f0e0d0c0b0a0908 (these were the registers holding the two relevant 64-bit numbers), and read them in the second breakpoint. These two registers converted to bytes and concatenated are the shuffle table.
+
+Here is the code that I wrote that performs the same operations (which I verifed using a debugger):
 ```cpp
 void encBlock(const uint8_t* input, uint8_t* output) {
     uint8_t f[16];
