@@ -166,4 +166,6 @@ decrypted = dp.read(buf_addr, len(pk))
 print(decrypted)
 ```
 
+## Unintended solution
 
+There also was an unintended solution in this task that was did not find, namely that the flag was present in the .DMP file in plaintext as UTF-16. This is probably due to the use of `ShellExecuteA`, which as far as I know first converts the ASCII string to UTF16.
