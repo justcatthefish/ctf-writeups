@@ -1,5 +1,6 @@
 p = gcd(int( Zmod(n)(c1+c2)/2), n)
 q = gcd(int( Zmod(n)(c2-c1)/2), n)
+r = n // p // q
 for i in [-1, 1]:
     for j in [-1, 1]:
         for k in [-1, 1]:
