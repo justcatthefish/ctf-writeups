@@ -12,10 +12,14 @@ secret spell correctly. Have fun ;)
 
 [problem.py](./problem.py) a9462eb7e3a634e2ca849d7f56c7a4f92d60c326
 
+<br />
+
 ## Analysis
 
 Try to analyze the challenge file ([problem.py](./problem.py)) to understand
 what it does. The scripting language used is python3.
+
+<br />
 
 ```python3
 from Crypto.Cipher import AES
@@ -25,6 +29,8 @@ from Crypto.Util.Padding import pad, unpad
 The script imports `Crypto` module. This is probably from
 [PyCryptodome](https://www.pycryptodome.org/) library.
 
+<br />
+
 ```python3
 from flag import flag, secret_spell
 ```
@@ -32,11 +38,15 @@ It also imports `flag` module. We're not given that and I doubt it's part of
 some library so this probably means that `flag` and `secret_spell` are meant to
 be unkown for players.
 
+<br />
+
 ```python3
 key = get_random_bytes(16)
 nonce = get_random_bytes(16)
 ```
 Two random byte-strings of length 16 are generated — `key` and `nonce`.
+
+<br />
 
 ```python3
 def encrypt():
@@ -65,6 +75,8 @@ We're given two functions, `encrypt()` and `'decrypt()`. The first one encrypts
 4. `ofb_input` is encrypted with AES in OFB mode. OFB mode requires `key` and
 	 `iv`. Worth noting is that the same `key` is used as the one in 1. step.
 5. Both `ofb_iv` and the ciphertext from the last step are returned.
+
+<br />
 
 ```python3
 def decrypt(data):
@@ -99,6 +111,8 @@ The important part is that whenever steps 2. or 3. fail, "ofb error" is
 returned. Step 2. should never fail so this is plain and simple padding oracle
 bug.
 
+<br />
+
 ## Running locally
 
 For debugging I had to run `problem.py` locally. For this we need to provide
@@ -110,9 +124,13 @@ secret_spell = bytes(16)
 flag = b'flag{fake}'
 ```
 
+<br />
+
 It's also a good idea to replace random `key`, `nonce`, and `iv` with some
 constant values. This way encryption/decryption always give the same results and
 it makes debugging easier.
+
+<br />
 
 ## Solution
 
@@ -168,6 +186,8 @@ def encrypt_oracle(pt):
     return bytes(x ^ 0x11 for x in data)
 ```
 
+<br />
+
 When iterating for the last byte in the block it's possible that the
 second-to-last byte happens to be equal to \\x02. In this case the last byte
 equal to both \\x02 and \\x01 will be considered a valid padding. This should
@@ -199,6 +219,8 @@ def encrypt_oracle(pt):
     return bytes(x ^ 0x11 for x in data)
 ```
 
+<br />
+
 My final version of an encryption oracle sends multiple decryption requests in
 one packet as network tends to be a bottleneck and this should hugely speed up
 the exploit. After CTF I've tried to run my solution without this optimization
@@ -216,5 +238,7 @@ PyCryptodome. Be warned that the code for that is hacky and ugly.
 
 Here's the final solution, it takes 2–3 minutes to complete:
 [solve.py](./solve.py)
+
+<br />
 
 ### Writeup Author: MrQubo
