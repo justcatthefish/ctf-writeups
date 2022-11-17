@@ -193,8 +193,8 @@ second-to-last byte happens to be equal to \\x02. In this case the last byte
 equal to both \\x02 and \\x01 will be considered a valid padding. This should
 happen rarely, but we will need to call encryption oracle multiple times so it's
 a good idea to make it failproof. The case of \\x02\\x02 padding can be verified
-by changing the second-last byte to anything different. This will invalidate the
-padding if the last byte is \\x02, because the second-to-last byte won't be
+by changing the second-to-last byte to anything different. This will invalidate
+the padding if the last byte is \\x02, because the second-to-last byte won't be
 equal to \\x02 any longer. But for \\x01 padding the second-to-last byte can be
 anything so it won't be invalidated. Here's a modified version of encryption
 oracle with this check included:
