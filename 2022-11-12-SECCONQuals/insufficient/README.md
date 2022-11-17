@@ -15,7 +15,7 @@ This leads to a matrix equation (x0, y0, ... are the values that were sampled):
 A = [ c[0]  c[1]  c[2]  c[3]  c[4]  c[5]  1  0  0  0  -f(x0, y0, z0)]
     [ c[0]  c[1]  c[2]  c[3]  c[4]  c[5]  0  1  0  0  -f(x1, y1, z1)]
     [ c[0]  c[1]  c[2]  c[3]  c[4]  c[5]  0  0  1  0  -f(x2, y2, z2)]
-    [ c[0]  c[1]  c[2]  c[3]  c[4]  c[5]  0  1  0  1  -f(x3, y3, z3)]
+    [ c[0]  c[1]  c[2]  c[3]  c[4]  c[5]  0  0  0  1  -f(x3, y3, z3)]
 ```
 Now, let
 ```
@@ -40,4 +40,12 @@ m[10] = [0, 0, 0, p                     , 0, 0, 0, 0, 0, 0, 0   ]
 ```
 
 The multiplier `C**2` is used so that the vector actually is short. `m[7:]` is because we have a modular equation - it can eliminate all the multiples of `p` added in the process.
+The short vector we obtain is
+```
+[ -(z0*c[6]+c[7]) -(z1*c[6]+c[7]) -(z2*c[6]+c[7]) -(z3*c[6]+c[7]) x' x'' x''' y' y'' y''' ]
+```
+(after correcting for the multiplier `C` or its powers).
+
 After running LLL, we receive a short vector which with high probability is the vector `c`. To recover two last coefficients, first observe that `c[6] = gcd((z0*c[6]+c[7]) - (z1*c[6]+c[7]), ((z2*c[6]+c[7]) - (z3*c[6]+c[7])))//2`. To recover `c[7]` we again use LLL, for equation `z0*c[6]+c[7] = know_value_of_lhs`.
+
+In solve.sage file there is a solver script.
