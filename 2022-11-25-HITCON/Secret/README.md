@@ -65,6 +65,11 @@ conditions, but I simply used the power of Wolfram Engine (can be used for free
 with some limitations on
 [https://www.wolframcloud.com/](https://www.wolframcloud.com/)) to solve this
 for me.
+Note: After the CTF I've found out this can be solved easily with LLL (Thanks to
+Robin for the idea). You can skip the remaining section if you want to read
+about that other solutions (it's more educative).
+
+#### Using Wolfram Engine
 
 I've used
 [FindInstance](https://reference.wolfram.com/language/ref/FindInstance.html) to
@@ -80,6 +85,54 @@ the products exactly, so the exponents cannot be too big.
 To find multiple different solutions I've added inequalities like `a0 - b0 ≠
 3304`. Simply using the last parameter of FindInstance[] function probably won't
 work, as it would find equivalent solutions, more on this later.
+
+<br />
+
+#### Using LLL
+
+I want
+```
+Sum a_i - Sum b_i == 0
+```
+```
+Sum a_i e_i - Sum b_i e_i == 0
+```
+I can treat these as equations with 128 unknowns `a_i`, `b_i`. I can put these
+equations into matrix. With three ciphertexts it would look like this:
+```
+1 0 0 0 0 0  1  e_0
+0 1 0 0 0 0  1  e_1
+0 0 1 0 0 0  1  e_2
+0 0 0 1 0 0 -1 -e_0
+0 0 0 0 1 0 -1 -e_1
+0 0 0 0 0 1 -1 -e_2
+```
+and with 64 ciphertexts:
+```
+1 0                  1  e_0
+0 1                  1  e_1
+    ...              ...
+        1 0          1  e_63
+        0 1         -1 -e_0
+            ...      ...
+                1 0 -1 -e_62
+                0 1 -1 -e_63
+```
+
+Let's denote this matrix by M. If `a_i`, `b_i` is a solution to the problem I
+want to solve then
+```
+(a_0, ..., a_63, b_0, ..., b_63) M == (a_0, ..., a_63, b_0, ..., b_63, 0, 0)
+```
+
+I want absolute values of `a_i` and `b_i` to be small, and 0 is also has a
+fairly small absolute value. I can therefore use LLL to find the solutions for
+me. Too make sure that LLL won't find solutions where the last to values aren't
+0 but some different small values e.g. 1, I must scale the last two columns of
+the matrix. I must scale these to be at least an order of magnitude bigger than
+the values `a_i`, `b_i`. I don't know how big these can be, so I just picked
+some number I consider big.
+
 
 <br />
 
@@ -129,6 +182,14 @@ m^g.
 ```
 If `g` is 1 this just gives us `m`. NB: xgcd, and so this technique, also works
 for more than two exponents.
+
+<br />
+
+Here are the implementations in SageMath:
+
+This one uses solutions computed with wolfram: [solve.sage](./solve.sage)
+
+This one computes solutions using LLL: [solve\_lll.sage](./solve_lll.sage)
 
 <br />
 
