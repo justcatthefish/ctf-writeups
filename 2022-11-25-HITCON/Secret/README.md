@@ -64,10 +64,12 @@ There might be some smart way to find sequences that satisfy those two
 conditions, but I simply used the power of Wolfram Engine (can be used for free
 with some limitations on
 [https://www.wolframcloud.com/](https://www.wolframcloud.com/)) to solve this
-for me.
+for me. \
 Note: After the CTF I've found out this can be solved easily with LLL (Thanks to
 Robin for the idea). You can skip the remaining section if you want to read
-about that other solutions (it's more educative).
+about that other solution (it's more educative).
+
+<br />
 
 #### Using Wolfram Engine
 
@@ -125,13 +127,13 @@ want to solve then
 (a_0, ..., a_63, b_0, ..., b_63) M == (a_0, ..., a_63, b_0, ..., b_63, 0, 0)
 ```
 
-I want absolute values of `a_i` and `b_i` to be small, and 0 is also has a
-fairly small absolute value. I can therefore use LLL to find the solutions for
-me. Too make sure that LLL won't find solutions where the last to values aren't
-0 but some different small values e.g. 1, I must scale the last two columns of
-the matrix. I must scale these to be at least an order of magnitude bigger than
-the values `a_i`, `b_i`. I don't know how big these can be, so I just picked
-some number I consider big.
+I want absolute values of `a_i` and `b_i` to be small, and 0 also has a fairly
+small absolute value. I can therefore use LLL to find the solutions. To make
+sure that LLL won't find solutions where the last to values aren't 0 but some
+different small values e.g. 1, I must scale the last two columns of the matrix.
+I must scale these to be at least an order of magnitude bigger than the values
+`a_i`, `b_i`. I don't know how big these can be, so I just picked some number I
+consider big.
 
 
 <br />
