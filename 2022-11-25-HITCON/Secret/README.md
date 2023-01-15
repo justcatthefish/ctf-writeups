@@ -149,9 +149,9 @@ Thanks to the solutions I've found I can take the gcd of different
 multiplicities of `n` to calculate some smaller multiplicity of `n`. As `n =
 p*q`, where `p` and `q` are big primes I can also divide this multiplicity by
 small primes (2, 3, 5, 7, ...) as these for sure aren't part of `n`. After that
-I checked log2 of the number. I know that `n` has about 2048 bits, so if log2 is
-smaller than 2048, and I divided all 2s from the number, this confirms that the
-number I've recovered is not just a multiplicity of `n`, it's exactly `n`.
+I checked log2 of the number. I know that `n` is a 2048–bit number, so if log2
+is smaller than 2048, then this confirms that the number I've recovered is not
+just a multiplicity of `n`, it's exactly `n`.
 
 <br />
 
