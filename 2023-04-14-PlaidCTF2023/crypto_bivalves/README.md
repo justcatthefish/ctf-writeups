@@ -15,3 +15,7 @@ Just rewrite it in z3. We skipped the initial 708 steps and started with a
 completely unknown state right after that.
 
 Solve script in [solve.py](./solve.py).
+
+<br />
+
+### Writeup Author: Cptn MrQubo
