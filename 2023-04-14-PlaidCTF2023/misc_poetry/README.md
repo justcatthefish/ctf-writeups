@@ -106,7 +106,7 @@ After that I worked thought the code the same way as before, making sure most li
 Also, there was one rhyme ("g"), which had to be longer than one vowel, so I put more nops in there.
 In the process I also realized I should check (in the `dictionary.arpa` file) what other words rhyme with "nop". There are "pop", "setnp", and "bswap", but in the end I think I only used "pop". Great, now I can tell my friends "Hey, did you know that nop rhymes with pop?".
 
-The final code/song is in [astley.S](./astley.S) file. You can easily become my best friend by sending me a video of you singing this on a party (NB: it's much easier with the music).
+The final code/song is in [astley.S](./astley.S) file. You can easily become my best friend by sending me a video of you singing this on a party (hints at the end).
 There's also [astley-not-poetry.S](./astley-not-poetry.S) which contains the code before being turned into a song.
 
 
@@ -144,6 +144,19 @@ Making this one was quite fun, as it had to contain many different rhymes and be
 
 The final code/song is in [wellerman.S](./wellerman.S) file. Please check out my sick rhymes, I wrote which lines are supposed to rhyme in the comments.
 There's also [wellerman-not-poetry.S](./wellerman-not-poetry.S) which contains the code before being turned into a song.
+
+<br />
+
+## Signing Astley
+
+In case you're interesed in singing Astley here are some useful tips:
+
+- **It's much easier with the music.**
+- You have too read through the `dictionary.arpa` file to know spellings of the
+words. Some of them are not obvious. Like "cx" being "K IH_ K S" or "jnz" being
+"JH EH_ N Z".
+- Numbers are spelled digit by digit.
+
 
 <br />
 
