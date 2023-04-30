@@ -147,4 +147,4 @@ There's also [wellerman-not-poetry.S](./wellerman-not-poetry.S) which contains t
 
 <br />
 
-### Writeup Author: MrQubo
+### Writeup Author: Cptn MrQubo
