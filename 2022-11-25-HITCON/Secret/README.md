@@ -66,7 +66,7 @@ with some limitations on
 [https://www.wolframcloud.com/](https://www.wolframcloud.com/)) to solve this
 for me. \
 Note: After the CTF I've found out this can be solved easily with LLL (Thanks to
-Robin for the idea). You can skip the remaining section if you want to read
+Robin for the idea). You can skip the following subsection if you want to read
 about that other solution (it's more educative).
 
 <br />
@@ -182,7 +182,7 @@ m^{x*a} * m^{y*b} ===  (mod n)
 m^{x*a + y*b} ===  (mod n)
 m^g.
 ```
-If `g` is 1 this just gives us `m`. NB: xgcd, and so this technique, also works
+If `g` is 1 this just gives me `m`. NB: xgcd, and so this technique, also works
 for more than two exponents.
 
 <br />
