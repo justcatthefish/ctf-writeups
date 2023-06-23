@@ -47,7 +47,7 @@ void set(longlong *addr,longlong val)
 
 ## The leak
 
-The first vulnerability is of course a tripple write-what-where condition,
+The first vulnerability is of course a triple write-what-where condition,
 but we can sacrifice the first write to gain an ASLR leak by sending short strings
 without null termination (say `a`) and abusing short reads.
 It leaks two libc pointers on remote.
