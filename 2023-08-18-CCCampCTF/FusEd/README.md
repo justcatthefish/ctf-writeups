@@ -79,7 +79,7 @@ Or-ing "Their value" with our value just yields "Our value".
 If we just generate a random keypair than it's virtually impossible that we will
 be able to write our public key to memory. Random value has about 50% == 16*8
 bits equal to 0 and for every 0 there's a 50% chance that the corresponding bit
-in their value is 1. So the chance of this not happening is $(1/2)^(16*8)$.
+in their value is 1. So the chance of this not happening is $`(1/2)^{16\times{}8}`$.
 That's probably the same as just clever bruteforcing of the key.  Instead we
 should seek for some value with not too many bits set to 0, so our random chance
 is reasonably high.
