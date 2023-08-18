@@ -92,9 +92,7 @@ understand a bit about EdDSA. But we only need to know the equations:
 Btw. most of the time curves are actually implemented using homogeneous
 polynomial (not really needed here, but you might be wondering why the code uses
 $x$, $y$, and $z$), so the real equation is:
-$$
--x^2 z^2 + y^2 z^2 = z^4 - \dfrac{121665}{121666} x^2 y^2
-$$
+$$ -x^2 z^2 + y^2 z^2 = z^4 - \dfrac{121665}{121666} x^2 y^2 $$
 
 ### C Code
 
