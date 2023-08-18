@@ -106,7 +106,7 @@ in C code:
 It's also important to know how public key is parsed from the binary format:
 [ge25519.c](https://github.com/warner/python-ed25519/blob/master/src/ed25519-supercop-ref/ge25519.c#L186-L231)
 Public key contains just one 255 bit number and one bit for parity. The public
-key (point on a curve) is derived by setting $y$ to this number and $y$ to $1$.
+key (point on a curve) is derived by setting $y$ to this number and $z$ to $1$.
 $x$ can be calculated but there are two possible solutions, hence parity bit is
 used to choose between the two.
 
