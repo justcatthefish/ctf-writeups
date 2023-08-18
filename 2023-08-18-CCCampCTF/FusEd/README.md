@@ -383,7 +383,6 @@ code = b'''
 ```
 $ cat flag.txt
 ALLES!{inspired by the RoT verification of the LPC54S0xx, cf. https://www.nxp.com/docs/en/application-note/AN13390.pdf}
-it won't work. We need to baypass the sandbox.
 ```
 
 Final solve script: [solve.py](./solve.py)
