@@ -2,6 +2,8 @@
 
 Solved by: Tacet
 
+![intro](./intro.png)
+
 ## Challenge Overview
 
 The challenge presented an interesting exploration into the capabilities and vulnerabilities of a language model's code generation. Participants were tasked with manipulating the model to generate a code snippet that would print the contents of a specific file ("/flag") using unconventional methods.
