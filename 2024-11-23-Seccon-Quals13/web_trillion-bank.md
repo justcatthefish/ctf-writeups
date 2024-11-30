@@ -1,5 +1,11 @@
 ### Trillion bank
 
+Due to vulnerability in sending money it was possible to generate any balance (e.g. trilion$) used to get the flag.
+Target account was correctly verified if ID is different than current, however target account was updated based on their name instead of ID.
+
+By default database has limits how much information each field can store, in this case it was `TEXT` field that could hold only 64kB and anything beyond that was truncated.
+We've exploited this fact by creating accounts with same prefix (name) for first 64kB and bypassing same name check that didn't had 64kB limit. Each money transfer is generating additional money to the other accounts.
+
 Our exploit:
 
 ```py
