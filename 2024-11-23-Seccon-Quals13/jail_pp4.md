@@ -27,7 +27,7 @@ const clone = (target, result = {}) => {
 };
 ```
 
-It does not check the `key` for `"prototype"` or `"__proto__"`. This means it is vulnerable to [prototype pollution] (https://learn.snyk.io/lesson/prototype-pollution/).
+It does not check the `key` for `"prototype"` or `"__proto__"`. This means it is vulnerable to [prototype pollution](https://learn.snyk.io/lesson/prototype-pollution/).
 
 And the other part of the script reminded us of [JSFuck](https://jsfuck.com/). The only problem is that JSFuck uses 6 characters (two more than were allowed in the task). That being said the JSFuck homepage includes a handy cheatsheet of strings it uses to encode different things:
 
