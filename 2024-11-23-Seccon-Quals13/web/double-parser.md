@@ -89,6 +89,6 @@ After which, the `<script>` executes.
 One last piece of the solution was to bypass the CSP and we did with the html/js plyglot:
 
 ```js
-<!
+<!--
 alert()//
 ```
