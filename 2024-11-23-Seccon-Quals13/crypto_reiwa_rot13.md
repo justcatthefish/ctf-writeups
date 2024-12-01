@@ -25,7 +25,7 @@ In fact, we are left with linear polynomial, which can be easily solved to obtai
 
 
 Solver:
-```
+```py
 from sage.all import *
 from Crypto.Util.number import *
 import codecs
