@@ -4,6 +4,8 @@ This is disconnect3d's solution to the hxp\_silicon\_foundaries\_hack4 challenge
 
 **The original challenge was hosted in [here](https://2024.ctf.link/internal/challenge/6b7ff9d7-efc9-47fc-a06e-4ab9ae6d9eaa/). The authors/organizers solution writeup can be found at [https://hxp.io/blog/120/hxp-38C3-CTF-hack4/](https://hxp.io/blog/120/hxp-38C3-CTF-hack4/).**
 
+**The raw challenge files can be found here: [../raw-challenge-files-hxp_silicon_foundaries_hack4-7786be6f6ac42883.tar.xz](../raw-challenge-files-hxp_silicon_foundaries_hack4-7786be6f6ac42883.tar.xz).**
+
 I (disconnect3d) gave a talk about this challenge. Slides can be found [here](https://docs.google.com/presentation/d/1u0koAAJ5ssjVOY-DLt2h9GOqInNxfFHZ98Ld8nti_O4).
 
 To see our exploit in action, do `./run.sh` and then `nc localhost 8010` -> and run `./e` to run the exploit.
