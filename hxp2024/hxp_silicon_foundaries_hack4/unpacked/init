@@ -1,0 +1,53 @@
+#!/bin/sh
+
+set -e
+
+[ -d /dev ] || mkdir -m 0755 /dev
+[ -d /sys ] || mkdir /sys
+[ -d /proc ] || mkdir /proc
+[ -d /tmp ] || mkdir /tmp
+[ -d /run ] || mkdir /run
+[ -d /root ] || mkdir /root
+[ -d /etc ] || mkdir /etc
+[ -d /home ] || mkdir /home
+
+echo 'root:x:0:0:root:/root:/bin/sh' > /etc/passwd
+echo 'root:x:0:' > /etc/group
+chmod 644 /etc/passwd
+chmod 644 /etc/group
+
+adduser ctf --uid 1000 --disabled-password 2>/dev/null
+
+chown -R root:root /
+chmod 700 -R /root
+chmod 4755 /bin/busybox
+chown ctf /home/ctf
+chmod 777 /home/ctf
+chmod 755 /dev
+
+mount -t proc -o nodev,noexec,nosuid proc /proc
+mount -t sysfs -o nodev,noexec,nosuid sysfs /sys
+mkdir -p /dev/pts
+mkdir -p /var/lock
+mount -t devtmpfs -o nosuid,mode=0755 udev /dev
+mkdir -p /dev/pts
+mount -t devpts -o noexec,nosuid,gid=5,mode=0620 devpts /dev/pts || true
+
+ln -sf /proc/mounts /etc/mtab
+
+echo 1 > /proc/sys/kernel/kptr_restrict
+echo 1 > /proc/sys/kernel/dmesg_restrict
+echo 1 > /proc/sys/kernel/perf_event_paranoid
+echo 0 > /proc/sys/kernel/printk
+
+echo "Boot took us $(cut -d' ' -f1 /proc/uptime) seconds"
+
+set +e
+stty -echo raw
+
+setsid cttyhack setuidgid 1000 /bin/sh
+
+umount /proc
+umount /sys
+
+poweroff -d 1 -n -f

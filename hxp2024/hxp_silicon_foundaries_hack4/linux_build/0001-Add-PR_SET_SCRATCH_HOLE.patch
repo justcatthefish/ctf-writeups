@@ -1,0 +1,65 @@
+From 9e4bb45f0cf64bf640b7cde987c8062b0f6040b2 Mon Sep 17 00:00:00 2001
+From: sisu <contact@hxp.io>
+Date: Mon, 2 Dec 2024 10:47:23 +0200
+Subject: [PATCH] Add PR_SET_SCRATCH_HOLE
+
+---
+ include/uapi/linux/prctl.h |  2 ++
+ kernel/sys.c               | 23 +++++++++++++++++++++++
+ 2 files changed, 25 insertions(+)
+
+diff --git a/include/uapi/linux/prctl.h b/include/uapi/linux/prctl.h
+index 35791791a879..c370cbb3cf6d 100644
+--- a/include/uapi/linux/prctl.h
++++ b/include/uapi/linux/prctl.h
+@@ -328,4 +328,6 @@ struct prctl_mm_map {
+ # define PR_PPC_DEXCR_CTRL_CLEAR_ONEXEC	0x10 /* Clear the aspect on exec */
+ # define PR_PPC_DEXCR_CTRL_MASK		0x1f
+ 
++#define PR_SET_SCRATCH_HOLE		0x53534352
++
+ #endif /* _LINUX_PRCTL_H */
+diff --git a/kernel/sys.c b/kernel/sys.c
+index b7e096e1c3a1..b2736bed6058 100644
+--- a/kernel/sys.c
++++ b/kernel/sys.c
+@@ -2326,6 +2326,26 @@ int __weak arch_prctl_spec_ctrl_set(struct task_struct *t, unsigned long which,
+ 
+ #define PR_IO_FLUSHER (PF_MEMALLOC_NOIO | PF_LOCAL_THROTTLE)
+ 
++static noinstr int prctl_set_scratch_hole(unsigned long opt, unsigned long addr,
++				  unsigned long size, unsigned long arg)
++{
++	const u64 new_scratch_hole = opt;
++	if ((new_scratch_hole & 0xFFFUL) != 0U) {
++		return -EINVAL;
++	}
++	if (new_scratch_hole < mmap_min_addr) {
++		return -EINVAL;
++	}
++	asm volatile(
++		"mov %0, %%rdi\n\t"
++		".byte 0x0f; .byte 0x0a; .byte 0x89\n\t" // scrhlw
++		:
++		: "r"(new_scratch_hole)
++		: "rdi", "memory"
++	);
++	return 0;
++}
++
+ #ifdef CONFIG_ANON_VMA_NAME
+ 
+ #define ANON_VMA_NAME_MAX_LEN		80
+@@ -2750,6 +2770,9 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
+ 	case PR_SET_VMA:
+ 		error = prctl_set_vma(arg2, arg3, arg4, arg5);
+ 		break;
++	case PR_SET_SCRATCH_HOLE:
++		error = prctl_set_scratch_hole(arg2, arg3, arg4, arg5);
++		break;
+ 	case PR_GET_AUXV:
+ 		if (arg4 || arg5)
+ 			return -EINVAL;
+-- 
+2.34.1
+
